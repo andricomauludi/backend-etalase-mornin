@@ -9,13 +9,15 @@ import (
 
 func main() {
 	r := gin.Default()
-	models.ConnectDatabase()
+	models.ConnectDatabase() //melakukan koneksi database
+
+	//URL CONTROLLER DAN FUNCTIONNYA
 
 	r.GET("api/products", productcontroller.Index)
-	r.GET("api/products/:id", productcontroller.Show)
+	r.GET("api/products/:id", productcontroller.Show) //terdapat id yg params nya dapat diambil oleh controller
 	r.POST("api/products", productcontroller.Create)
 	r.PUT("api/products/:id", productcontroller.Update)
 	r.DELETE("api/products", productcontroller.Delete)
 
-	r.Run()
+	r.Run() //WAJIB ADA agar controller terjalani
 }
