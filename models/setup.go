@@ -29,4 +29,5 @@ func ConnectDatabase() {
 >>>>>>> development
 
 	DB = database
+	//test merge
 }
