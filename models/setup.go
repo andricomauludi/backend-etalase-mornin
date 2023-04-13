@@ -16,4 +16,5 @@ func ConnectDatabase() {
 	database.AutoMigrate(&Product{}) //melakukan migrate pada mysql
 
 	DB = database
+	//test merge
 }
