@@ -3,11 +3,13 @@ package main
 import (
 	"github.com/andricomauludi/backend-etalase-mornin/controllers/productcontroller"
 	"github.com/andricomauludi/backend-etalase-mornin/models"
+
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	r := gin.Default()
+
 	models.ConnectDatabase() //melakukan koneksi database
 
 	//URL CONTROLLER DAN FUNCTIONNYA
