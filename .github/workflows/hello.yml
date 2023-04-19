@@ -3,12 +3,12 @@ name: hello world
 on:
   push:
     branches:
-      -main
+      - main
 
 jobs:
   Hello:
     runs-on: ubuntu-latest
     steps:
       - name: Hello World!
-        run: echo "Hello World!!"
+        run: echo "Hello World"
   
