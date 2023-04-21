@@ -5,9 +5,8 @@ import (
 	"net/http"
 
 	"github.com/andricomauludi/backend-etalase-mornin/models"
-	"gorm.io/gorm"
-
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func Index(c *gin.Context) {
