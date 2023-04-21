@@ -43,3 +43,5 @@ func Register(w http.ResponseWriter, l *http.Request) { //mengambil input json y
 func Logout(w http.ResponseWriter, l *http.Request) {
 
 }
+
+//test
