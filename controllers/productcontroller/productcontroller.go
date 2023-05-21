@@ -14,7 +14,7 @@ func Index(c *gin.Context) {
 	var products []models.Product //array dan ambil model product
 
 	models.DB.Find(&products)
-	c.JSON(http.StatusOK, gin.H{"products": products}) //untuk return json nya
+	c.JSON(http.StatusOK, gin.H{"product": products}) //untuk return json nya
 }
 func Show(c *gin.Context) {
 	var product models.Product //ambil model product

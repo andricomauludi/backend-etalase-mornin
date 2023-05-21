@@ -1,47 +1,50 @@
 package authcontroller
 
 import (
-	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/andricomauludi/backend-etalase-mornin/models"
+	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func Login(w http.ResponseWriter, l *http.Request) {
+func Signup(c *gin.Context) {
+	// get email/ pass off req body
+	var body models.User
 
-}
-func Register(w http.ResponseWriter, l *http.Request) { //mengambil input json yg diterima
+	if c.ShouldBindJSON(&body) != nil { //apabila body yang diberikan tidak mengembalikan apa apa
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Body not found", //memberikan pesan eror
+		})
 
-	var userInput models.User
-	decoder := json.NewDecoder(l.Body)
-	if err := decoder.Decode(&userInput); err != nil {
-		log.Fatal("Failed to decode json")
-	}
-	defer l.Body.Close()
-
-	//hash password menggunakan bcrypt
-
-	//membuat hashpassword dengan input password dari user dan bcrypt
-	hashPassword, _ := bcrypt.GenerateFromPassword([]byte(userInput.Password), bcrypt.DefaultCost)
-	// memasukkan password yg diinput ke dalam models
-	userInput.Password = string(hashPassword)
-
-	//insert ke db
-	if err := models.DB.Create(&userInput).Error; err != nil {
-		log.Fatal("Failed to save data")
+		return
 	}
 
-	//respon json
-	response, _ := json.Marshal(map[string]string{"message": "success to insert"})
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(response)
+	//Hash the password
 
+	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"Eror": "Failed to hash password", //memberikan pesan eror
+		})
+
+		return
+	}
+
+	//Create the user
+	user := models.User{NamaLengkap: body.NamaLengkap, Username: body.Username, Password: string(hash)}
+	result := models.DB.Create(&user)
+
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"Eror": "Failed to create user, change ur username", //memberikan pesan eror
+		})
+
+		return
+	}
+
+	//respond
+
+	c.JSON(http.StatusOK, gin.H{"Success": body})
 }
-func Logout(w http.ResponseWriter, l *http.Request) {
-
-}
-
-//test rebase commit
