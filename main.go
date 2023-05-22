@@ -4,6 +4,7 @@ import (
 	"github.com/andricomauludi/backend-etalase-mornin/controllers/authcontroller"
 	"github.com/andricomauludi/backend-etalase-mornin/controllers/productcontroller"
 	"github.com/andricomauludi/backend-etalase-mornin/initializers"
+	"github.com/andricomauludi/backend-etalase-mornin/middleware"
 	"github.com/andricomauludi/backend-etalase-mornin/models"
 	"github.com/gin-gonic/gin"
 )
@@ -20,7 +21,10 @@ func main() {
 	// //URL CONTROLLER DAN FUNCTIONNYA
 
 	//AUTH
-	r.POST("api/signup", authcontroller.Signup)
+	r.POST("api/auth/signup", authcontroller.Signup)
+	r.POST("api/auth/login", authcontroller.Login)
+	r.GET("api/auth/validate", middleware.RequireAuth, authcontroller.Validate)
+
 	//CRUD Product
 	r.GET("api/products", productcontroller.Index)
 	r.GET("api/products/:id", productcontroller.Show) //terdapat id yg params nya dapat diambil oleh controller
