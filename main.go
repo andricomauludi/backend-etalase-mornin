@@ -24,6 +24,7 @@ func main() {
 	r.POST("api/auth/signup", authcontroller.Signup)
 	r.POST("api/auth/login", authcontroller.Login)
 	r.GET("api/auth/validate", middleware.RequireAuth, authcontroller.Validate)
+	r.GET("api/user/showall", middleware.RequireAuth, authcontroller.Showall)
 
 	//CRUD Product
 	r.GET("api/products", productcontroller.Index)
