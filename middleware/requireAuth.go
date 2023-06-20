@@ -56,7 +56,7 @@ func RequireAuth(c *gin.Context) {
 	}
 
 }
-func Authorization(validRoles string) gin.HandlerFunc {
+func Authorization(validRoles []int) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		//get the cookie off request
 		tokenString, err := c.Cookie("Authorization")
@@ -77,23 +77,21 @@ func Authorization(validRoles string) gin.HandlerFunc {
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 
-			// rolesVal := claims["Role"]
+			rolesVal := claims["role"]
+			fmt.Println("roles", rolesVal)
 
-			// roles := rolesVal.([]int)
-			// validation := make(map[int]int)
-			// for _, val := range roles {
-			// 	validation[val] = 0
-			// }
+			roles := rolesVal.([]int)
+			validation := make(map[int]int)
+			for _, val := range roles {
+				validation[val] = 0
+			}
 
-			// for _, val := range validRoles {
-			// 	if _, ok := validation[val]; !ok {
-			// 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [Role]"})
-
-			// 	}
-			// }
-			// panic(claims["role"] != validRoles )
-
-			if claims["role"] != validRoles {
+			for _, val := range validRoles {
+				if _, ok := validation[val]; !ok {
+					c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [Role]"})
+				}
+			}
+			if claims["role"] != validRoles[0] {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [Role]"})
 
 			}
@@ -108,6 +106,24 @@ func Authorization(validRoles string) gin.HandlerFunc {
 
 	}
 }
+
+// func parseStringToIntSlice(str string) []int {
+// 	values := make([]int, 0)
+
+// 	// Split string by comma
+// 	strValues := strings.Split(str, ",")
+
+// 	// Convert each string value to int
+// 	for _, s := range strValues {
+// 		num, err := strconv.Atoi(strings.TrimSpace(s))
+// 		if err != nil {
+// 			return nil
+// 		}
+// 		values = append(values, num)
+// 	}
+
+// 	return values
+// }
 
 // func Authorization2(validRoles []int) gin.HandlerFunc {
 // 	return func(context *gin.Context) {

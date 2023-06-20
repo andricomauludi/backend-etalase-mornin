@@ -23,7 +23,7 @@ func main() {
 	//AUTH
 	r.POST("api/auth/signup", authcontroller.Signup)
 	r.POST("api/auth/login", authcontroller.Login)
-	r.GET("api/auth/validate", middleware.RequireAuth, middleware.Authorization(string("1")), authcontroller.Validate)
+	r.GET("api/auth/validate", middleware.RequireAuth, middleware.Authorization([]int{1, 2}), authcontroller.Validate)
 	r.GET("api/user/showall", middleware.RequireAuth, authcontroller.Showall)
 
 	//CRUD Product
