@@ -46,7 +46,12 @@ func Signup(c *gin.Context) {
 	}
 
 	//Create the user
-	user := models.User{NamaLengkap: body.NamaLengkap, Username: body.Username, Password: string(hash)} //membuat user pada mysql dengan api post body yang dikirimkan
+	//1 superadmin
+	//2 admin
+	//3 cashier
+	//4 dashboard management
+	//5 customer
+	user := models.User{NamaLengkap: body.NamaLengkap, Username: body.Username, Password: string(hash), Role: "5"} //membuat user pada mysql dengan api post body yang dikirimkan
 	result := models.DB.Create(&user)
 
 	messageinsert := make(map[string]interface{})
@@ -78,7 +83,7 @@ func Signup(c *gin.Context) {
 	// Insert the inner JSON object into the outer JSON object
 	outer[0] = inner
 
-	c.JSON(http.StatusOK, gin.H{"status": 1, "data": outer})
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": inner})
 }
 
 func Login(c *gin.Context) {

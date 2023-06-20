@@ -4,8 +4,8 @@ import "gorm.io/gorm"
 
 type User struct {
 	gorm.Model
-	NamaLengkap string `gorm:"varchar(100)" json:"nama_lengkap"`
+	NamaLengkap string `gorm:"type:varchar(100)" json:"nama_lengkap"`
 	Username    string `gorm:"unique" json:"username"`
 	Password    string `gorm:"varchar(50)" json:"password"`
-	Role        string `gorm:"varchar(50)" json:"role_id"`
+	Role        string `gorm:"type:varchar(5)" json:"role_id"`
 }
