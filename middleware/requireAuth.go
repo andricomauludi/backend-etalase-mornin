@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/andricomauludi/backend-etalase-mornin/models"
@@ -77,34 +79,56 @@ func Authorization(validRoles []int) gin.HandlerFunc {
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 
-			rolesVal := claims["role"]
-			fmt.Println("roles", rolesVal)
+			stringrole := claims["role"].(string)
+			rolesVal := stringToIntSlice(stringrole)
+			fmt.Println(stringrole)
+			// return
 
-			roles := rolesVal.([]int)
+			roles := rolesVal
 			validation := make(map[int]int)
 			for _, val := range roles {
 				validation[val] = 0
 			}
 
-			for _, val := range validRoles {
-				if _, ok := validation[val]; !ok {
-					c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [Role]"})
-				}
-			}
-			if claims["role"] != validRoles[0] {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [Role]"})
+			// for _, val := range validRoles {
+			// 	if _, ok := validation[val]; !ok {
+			// 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [Role]"})
+			// 	}
+			// }
+			for i := 0; i < len(validRoles); i++ {
+				for y := 0; y < len(roles); y++ {
+					if roles[y] == validRoles[i] {
+						c.Next()
 
+					}
+
+				}
 			}
 
 			//continue
 
-			c.Next()
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [token not valid]"})
 
 		} else {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [token not valid]"})
 		}
 
 	}
+}
+func stringToIntSlice(str string) []int {
+	strSlice := strings.Split(str, " ")
+	intSlice := make([]int, 0, len(strSlice))
+
+	for _, s := range strSlice {
+		num, err := strconv.Atoi(s)
+		if err != nil {
+			// handle error if necessary
+			continue
+		}
+		intSlice = append(intSlice, num)
+	}
+
+	return intSlice
 }
 
 // func parseStringToIntSlice(str string) []int {
