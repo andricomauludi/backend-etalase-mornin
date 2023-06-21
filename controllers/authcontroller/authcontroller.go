@@ -13,9 +13,9 @@ import (
 
 func Signup(c *gin.Context) {
 	// get email/ pass off req body
-	var body models.User
+	var body models.User //mengambil body dari post api dan menyocokkan dengan yang ada di model
 
-	messagebody := make(map[string]interface{})
+	messagebody := make(map[string]interface{}) //membuat message untuk response
 
 	// Insert the inner JSON object into the outer JSON object
 	messagebody["message"] = "Body not found or error, please try again"
@@ -30,7 +30,7 @@ func Signup(c *gin.Context) {
 
 	//Hash the password
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
+	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), 10) //melakukan hashing pada password untuk disimpan
 
 	messagepass := make(map[string]interface{})
 
@@ -46,7 +46,12 @@ func Signup(c *gin.Context) {
 	}
 
 	//Create the user
-	user := models.User{NamaLengkap: body.NamaLengkap, Username: body.Username, Password: string(hash)}
+	//1 superadmin
+	//2 admin
+	//3 cashier
+	//4 dashboard management
+	//5 customer
+	user := models.User{NamaLengkap: body.NamaLengkap, Username: body.Username, Password: string(hash), Role: "5"} //membuat user pada mysql dengan api post body yang dikirimkan
 	result := models.DB.Create(&user)
 
 	messageinsert := make(map[string]interface{})
@@ -78,7 +83,7 @@ func Signup(c *gin.Context) {
 	// Insert the inner JSON object into the outer JSON object
 	outer[0] = inner
 
-	c.JSON(http.StatusOK, gin.H{"status": 1, "data": outer})
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": inner})
 }
 
 func Login(c *gin.Context) {
@@ -120,7 +125,7 @@ func Login(c *gin.Context) {
 	}
 
 	//compare sent in pass with saved user pass hash
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password)) //melakukan compare antara hashing password dan password yang diberikan oleh post api
 
 	if err != nil {
 		messagebody := make(map[string]interface{})
@@ -138,12 +143,13 @@ func Login(c *gin.Context) {
 	//generate a jwt token
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": user.ID,
-		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
+		"sub":  user.ID,
+		"role": user.Role,
+		"exp":  time.Now().Add(time.Hour * 24 * 30).Unix(),
 	})
 
 	// Sign and get the complete encoded token as a string using the secret
-	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET")))
+	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET"))) //mengambil env secret
 
 	if err != nil {
 		messagebody := make(map[string]interface{})
@@ -161,10 +167,16 @@ func Login(c *gin.Context) {
 	//sent it back
 
 	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("Authorization", tokenString, 3600*24*30, "", "", false, true)
+	c.SetCookie("Authorization", tokenString, 3600*24*30, "", "", false, true) //menyimpan cookie authorization jwt
+	messagelogin := make(map[string]interface{})
+
+	// Insert the inner JSON object into the outer JSON object
+	messagelogin["message"] = "Login Successful!"
+	messagelogin["token"] = tokenString
 	c.JSON(http.StatusOK, gin.H{
+
 		"status": 1,
-		"data":   "Login Successful! ",
+		"data":   messagelogin,
 	})
 }
 
@@ -175,4 +187,17 @@ func Validate(c *gin.Context) {
 		"status": 1,
 		"data":   user,
 	})
+}
+
+func Showall(c *gin.Context) {
+
+	var user []models.User //array dan ambil model product
+
+	models.DB.Find(&user)
+	// returndata := make(map[string]interface{})
+	// returndata["username"] = user.username
+	// returndata["username"] = user.username
+
+	// Insert the inner JSON object into the oute
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": user}) //untuk return json nya
 }
