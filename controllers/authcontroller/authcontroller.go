@@ -51,7 +51,7 @@ func Signup(c *gin.Context) {
 	//3 cashier
 	//4 dashboard management
 	//5 customer
-	user := models.User{NamaLengkap: body.NamaLengkap, Username: body.Username, Password: string(hash), Role: "5"} //membuat user pada mysql dengan api post body yang dikirimkan
+	user := models.User{Fullname: body.Fullname, Username: body.Username, Password: string(hash), Role: "5"} //membuat user pada mysql dengan api post body yang dikirimkan
 	result := models.DB.Create(&user)
 
 	messageinsert := make(map[string]interface{})
@@ -69,7 +69,7 @@ func Signup(c *gin.Context) {
 
 	//respond
 
-	// var isian = map[string]string{"username": body.Username, "Nama Lengkap": body.NamaLengkap}
+	// var isian = map[string]string{"username": body.Username, "Nama Lengkap": body.Fullname}
 	// var responses = map[string]string{"message": "Account Created!"}
 	// responses["data"] = isian
 
@@ -78,7 +78,7 @@ func Signup(c *gin.Context) {
 	// Create the inner JSON object
 	inner := make(map[string]interface{})
 	inner["username"] = body.Username
-	inner["nama_lengkap"] = body.NamaLengkap
+	inner["fullname"] = body.Fullname
 
 	// Insert the inner JSON object into the outer JSON object
 	outer[0] = inner
@@ -90,9 +90,9 @@ func Login(c *gin.Context) {
 	//get the email and pass off req body
 
 	var body struct {
-		NamaLengkap string `gorm:"varchar(100)" json:"nama_lengkap"`
-		Username    string `gorm:"unique" json:"username"`
-		Password    string `gorm:"varchar(50)" json:"password"`
+		Fullname string `gorm:"varchar(100)" json:"fullname"`
+		Username string `gorm:"unique" json:"username"`
+		Password string `gorm:"varchar(50)" json:"password"`
 	}
 
 	if c.ShouldBindJSON(&body) != nil { //apabila body yang diberikan tidak mengembalikan apa apa
