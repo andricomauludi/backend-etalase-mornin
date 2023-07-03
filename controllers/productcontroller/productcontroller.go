@@ -16,6 +16,24 @@ func Index(c *gin.Context) {
 	models.DB.Find(&products)
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products}) //untuk return json nya
 }
+func Show_sandwich(c *gin.Context) {
+
+	var products []models.Product //array dan ambil model product
+	models.DB.Find(&products, "menu_type = ?", "sandwich")
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products}) //untuk return json nya
+}
+func Show_rice(c *gin.Context) {
+
+	var products []models.Product //array dan ambil model product
+	models.DB.Find(&products, "menu_type = ?", "rice")
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products}) //untuk return json nya
+}
+func Show_coffee(c *gin.Context) {
+
+	var products []models.Product //array dan ambil model product
+	models.DB.Find(&products, "menu_type = ?", "coffee")
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products}) //untuk return json nya
+}
 func Show(c *gin.Context) {
 	var product models.Product //ambil model product
 	id := c.Param("id")        //ngambil params dari URL main.go
@@ -32,6 +50,7 @@ func Show(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": product})
 }
+
 func Create(c *gin.Context) {
 
 	var product models.Product

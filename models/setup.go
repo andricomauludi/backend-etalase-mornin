@@ -13,7 +13,7 @@ func ConnectDatabase() {
 		panic(err) //mengembalikan error apabila terdapat eror
 	}
 
-	database.AutoMigrate(&Product{}, &User{}) //melakukan migrate pada mysql
+	database.AutoMigrate(&Product{}, &User{}, &Transaction{}) //melakukan migrate pada mysql
 
 	DB = database
 	//test merge
