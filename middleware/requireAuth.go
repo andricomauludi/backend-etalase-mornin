@@ -107,7 +107,7 @@ func Authorization(validRoles []int) gin.HandlerFunc {
 
 			//continue
 
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [token not valid]"})
+			c.Next()
 
 		} else {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [token not valid]"})
@@ -123,7 +123,7 @@ func stringToIntSlice(str string) []int {
 		num, err := strconv.Atoi(s)
 		if err != nil {
 			// handle error if necessary
-			continue
+			// continue
 		}
 		intSlice = append(intSlice, num)
 	}
