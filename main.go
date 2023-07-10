@@ -31,7 +31,7 @@ func main() {
 
 	api.Use(middleware.RequireAuth)
 
-	product := api.Group("/products")
+	product := api.Group("/product")
 	auth := api.Group("/auth")
 
 	product.Use(middleware.Authorization([]int{1, 2, 4}))
