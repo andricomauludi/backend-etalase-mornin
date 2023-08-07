@@ -3,7 +3,7 @@ FROM golang:latest
 RUN mkdir /build
 WORKDIR /build
 
-RUN export GO111MODULE=on
+RUN export GO111MODULE=auto
 RUN go get github.com/andricomauludi/backend-etalase-mornin
 RUN cd /build && git clone https://github.com/andricomauludi/backend-etalase-mornin.git
 
