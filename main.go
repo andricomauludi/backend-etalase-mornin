@@ -27,15 +27,15 @@ func main() {
 	//3 cashier
 	//4 dashboard management
 	//5 customer
+	r.Use(middleware.CORSMiddleware())
 	api := r.Group("/api")
-
-	api.Use(middleware.RequireAuth)
+	// api.Use(middleware.RequireAuth)
 
 	product := api.Group("/product")
 	auth := api.Group("/auth")
 
-	product.Use(middleware.Authorization([]int{1, 2, 4}))
-	auth.Use(middleware.Authorization([]int{1, 2}))
+	// product.Use(middleware.Authorization([]int{1, 2, 4}))
+	// auth.Use(middleware.Authorization([]int{1, 2}))
 
 	//CRUD Product ((RBAC and customer))
 	r.GET("/api/product", productcontroller.Index)
