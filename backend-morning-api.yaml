@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-morning-api
+  labels:
+    app: backend-morning-api
+spec:
+  # replicas: 3
+  selector:
+    matchLabels:
+      app: backend-morning-api
+  template:
+    metadata:
+      labels:
+        app: backend-morning-api
+    spec:
+      containers:
+      - name: app
+        image: andricomauludi/backend-morning-api
+        ports:
+        - containerPort: 8090
+        
+       
