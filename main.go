@@ -39,11 +39,11 @@ func main() {
 
 	//CRUD Product ((RBAC and customer))
 	r.GET("/api/product", productcontroller.Index)
-	r.GET("/api/product/sandwich", productcontroller.Show_sandwich)
-	r.GET("/api/product/rice", productcontroller.Show_rice)
-	r.GET("/api/product/coffee", productcontroller.Show_coffee)
+	r.GET("/api/product/makanan", productcontroller.Show_makanan)
+	r.GET("/api/product/minuman", productcontroller.Show_minuman)
+	r.GET("/api/product/cemilan", productcontroller.Show_cemilan)
 	r.GET("/api/product/:id", productcontroller.Show) //terdapat id yg params nya dapat diambil oleh controller
-	product.POST("/", productcontroller.Create)
+	product.POST("/create", productcontroller.CreateDummy)
 	product.PUT("/:id", productcontroller.Update)
 	product.DELETE("/", productcontroller.Delete)
 

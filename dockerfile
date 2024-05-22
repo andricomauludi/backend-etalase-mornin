@@ -1,14 +1,13 @@
-FROM golang:latest
+FROM golang:alpine
 
-RUN mkdir /build
-WORKDIR /build
+RUN apk update && apk add --no-cache git
 
-RUN export GO111MODULE=auto
-RUN go get github.com/andricomauludi/backend-etalase-mornin
-RUN cd /build && git clone https://github.com/andricomauludi/backend-etalase-mornin.git
+WORKDIR /app
 
-RUN cd /build/backend-etalase-mornin && go build
+COPY . .
 
-EXPOSE 8090
+RUN go mod tidy
 
-ENTRYPOINT ["/build/backend-etalase-mornin/main"]
+RUN go build -o binary
+
+ENTRYPOINT ["/app/binary"]

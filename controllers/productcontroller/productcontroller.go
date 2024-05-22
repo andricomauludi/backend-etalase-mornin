@@ -3,6 +3,9 @@ package productcontroller
 import (
 	"encoding/json"
 	"net/http"
+	"path/filepath"
+	"strconv"
+	"time"
 
 	"github.com/andricomauludi/backend-etalase-mornin/models"
 	"github.com/gin-gonic/gin"
@@ -16,22 +19,22 @@ func Index(c *gin.Context) {
 	models.DB.Find(&products)
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products}) //untuk return json nya
 }
-func Show_sandwich(c *gin.Context) {
+func Show_makanan(c *gin.Context) {
 
 	var products []models.Product //array dan ambil model product
-	models.DB.Find(&products, "menu_type = ?", "sandwich")
+	models.DB.Find(&products, "jenis_menu = ?", "makanan")
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products}) //untuk return json nya
 }
-func Show_rice(c *gin.Context) {
+func Show_cemilan(c *gin.Context) {
 
 	var products []models.Product //array dan ambil model product
-	models.DB.Find(&products, "menu_type = ?", "rice")
+	models.DB.Find(&products, "jenis_menu = ?", "cemilan")
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products}) //untuk return json nya
 }
-func Show_coffee(c *gin.Context) {
+func Show_minuman(c *gin.Context) {
 
 	var products []models.Product //array dan ambil model product
-	models.DB.Find(&products, "menu_type = ?", "coffee")
+	models.DB.Find(&products, "jenis_menu = ?", "minuman")
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products}) //untuk return json nya
 }
 func Show(c *gin.Context) {
@@ -49,6 +52,50 @@ func Show(c *gin.Context) {
 		}
 	}
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": product})
+}
+
+func CreateDummy(c *gin.Context) {
+
+	// Parse multipart form data
+	err := c.Request.ParseMultipartForm(10 << 20) // 10MB max size
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse multipart form"})
+		return
+	}
+
+	// Access form values
+	formData := make(map[string]string)
+	for key, values := range c.Request.MultipartForm.Value {
+		if len(values) > 0 {
+			formData[key] = values[0]
+		}
+	}
+
+	// Process form data
+	// Here you can do whatever you need with the form data
+	// For example, you can save it to a database, perform some validation, etc.
+
+	// Access uploaded files
+	files := c.Request.MultipartForm.File["files"]
+	for _, file := range files {
+		// Generate a unique filename with timestamp
+		timestamp := time.Now().UnixNano()
+		filename := file.Filename
+		ext := filepath.Ext(filename)
+		filename = filename[:len(filename)-len(ext)] + "_" + strconv.FormatInt(timestamp, 10) + ext
+
+		// Specify the destination directory
+		dest := filepath.Join("assets/photo/products", filename)
+
+		// Save the uploaded file to the destination directory
+		if err := c.SaveUploadedFile(file, dest); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to save file"})
+			return
+		}
+	}
+
+	// Respond with a success message
+	c.JSON(http.StatusOK, gin.H{"message": "Form submitted successfullyrrr", "data": formData, "File": files})
 }
 
 func Create(c *gin.Context) {
