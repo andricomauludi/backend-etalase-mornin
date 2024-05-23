@@ -63,39 +63,37 @@ func CreateDummy(c *gin.Context) {
 		return
 	}
 
-	// Access form values
-	formData := make(map[string]string)
-	for key, values := range c.Request.MultipartForm.Value {
-		if len(values) > 0 {
-			formData[key] = values[0]
-		}
+	// Access the uploaded file
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No file uploaded or invalid file field name"})
+		return
 	}
 
-	// Process form data
-	// Here you can do whatever you need with the form data
-	// For example, you can save it to a database, perform some validation, etc.
+	// Generate a unique filename with timestamp
+	timestamp := time.Now().UnixNano()
+	filename := file.Filename
+	ext := filepath.Ext(filename)
+	filename = filename[:len(filename)-len(ext)] + "_" + strconv.FormatInt(timestamp, 10) + ext
 
-	// Access uploaded files
-	files := c.Request.MultipartForm.File["files"]
-	for _, file := range files {
-		// Generate a unique filename with timestamp
-		timestamp := time.Now().UnixNano()
-		filename := file.Filename
-		ext := filepath.Ext(filename)
-		filename = filename[:len(filename)-len(ext)] + "_" + strconv.FormatInt(timestamp, 10) + ext
+	// Specify the destination directory
+	dest := filepath.Join("models", filename)
 
-		// Specify the destination directory
-		dest := filepath.Join("assets/photo/products", filename)
-
-		// Save the uploaded file to the destination directory
-		if err := c.SaveUploadedFile(file, dest); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to save file"})
-			return
-		}
+	// Save the uploaded file to the destination directory
+	if err := c.SaveUploadedFile(file, dest); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to save file"})
+		return
 	}
+
+	// Save file details to the database
+	upload := models.Product{
+		Photo: file.Filename,
+		// ContentType: file.Header.Get("Content-Type"),
+	}
+	models.DB.Create(&upload)
 
 	// Respond with a success message
-	c.JSON(http.StatusOK, gin.H{"message": "Form submitted successfullyrrr", "data": formData, "File": files})
+	c.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully"})
 }
 
 func Create(c *gin.Context) {
