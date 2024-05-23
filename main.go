@@ -43,7 +43,8 @@ func main() {
 	r.GET("/api/product/minuman", productcontroller.Show_minuman)
 	r.GET("/api/product/cemilan", productcontroller.Show_cemilan)
 	r.GET("/api/product/:id", productcontroller.Show) //terdapat id yg params nya dapat diambil oleh controller
-	product.POST("/create", productcontroller.CreateDummy)
+	product.POST("/create", productcontroller.Create)
+	// product.POST("/base64convert", productcontroller.Base64converter)
 	product.PUT("/:id", productcontroller.Update)
 	product.DELETE("/", productcontroller.Delete)
 

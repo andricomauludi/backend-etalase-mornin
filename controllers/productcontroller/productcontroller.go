@@ -1,8 +1,11 @@
 package productcontroller
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -14,28 +17,129 @@ import (
 
 func Index(c *gin.Context) {
 
-	var products []models.Product //array dan ambil model product
+	var products []models.Product
 
-	models.DB.Find(&products)
-	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products}) //untuk return json nya
+	// Retrieve the products from the database
+	if err := models.DB.Find(&products).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Loop through the products and convert their desired fields to base64
+	var base64Strings []string
+	for i, product := range products {
+		// Assuming you want to convert the product name to base64
+		// Adjust this to convert the appropriate field
+		base64String, err := ConvertFileToBase64("assets/photo/products/" + product.Photo)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{"status": -1, "message": products, "base64": base64Strings})
+
+		}
+		products[i].Photo = base64String
+
+		// base64String := base64.StdEncoding.EncodeToString([]byte("assets/photo/products/"+product.Photo))
+	}
+
+	// Return the JSON response with products and their base64 encoded fields
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products})
+}
+func ConvertFileToBase64(filePath string) (string, error) {
+	// Open the file
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	// Read file content into a byte slice
+	fileBytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		return "", err
+	}
+
+	// Convert file content to base64
+	base64String := base64.StdEncoding.EncodeToString(fileBytes)
+
+	return base64String, nil
 }
 func Show_makanan(c *gin.Context) {
 
 	var products []models.Product //array dan ambil model product
-	models.DB.Find(&products, "jenis_menu = ?", "makanan")
-	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products}) //untuk return json nya
+
+	if err := models.DB.Find(&products, "jenis_menu = ?", "makanan").Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Loop through the products and convert their desired fields to base64
+	var base64Strings []string
+	for i, product := range products {
+		// Assuming you want to convert the product name to base64
+		// Adjust this to convert the appropriate field
+		base64String, err := ConvertFileToBase64("assets/photo/products/" + product.Photo)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{"status": -1, "message": products, "base64": base64Strings})
+
+		}
+		products[i].Photo = base64String
+
+		// base64String := base64.StdEncoding.EncodeToString([]byte("assets/photo/products/"+product.Photo))
+	}
+
+	// Return the JSON response with products and their base64 encoded fields
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products})
 }
 func Show_cemilan(c *gin.Context) {
 
 	var products []models.Product //array dan ambil model product
-	models.DB.Find(&products, "jenis_menu = ?", "cemilan")
-	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products}) //untuk return json nya
+	if err := models.DB.Find(&products, "jenis_menu = ?", "cemilan").Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Loop through the products and convert their desired fields to base64
+	var base64Strings []string
+	for i, product := range products {
+		// Assuming you want to convert the product name to base64
+		// Adjust this to convert the appropriate field
+		base64String, err := ConvertFileToBase64("assets/photo/products/" + product.Photo)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{"status": -1, "message": products, "base64": base64Strings})
+
+		}
+		products[i].Photo = base64String
+
+		// base64String := base64.StdEncoding.EncodeToString([]byte("assets/photo/products/"+product.Photo))
+	}
+
+	// Return the JSON response with products and their base64 encoded fields
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products})
 }
 func Show_minuman(c *gin.Context) {
 
 	var products []models.Product //array dan ambil model product
-	models.DB.Find(&products, "jenis_menu = ?", "minuman")
-	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products}) //untuk return json nya
+	if err := models.DB.Find(&products, "jenis_menu = ?", "minuman").Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Loop through the products and convert their desired fields to base64
+	var base64Strings []string
+	for i, product := range products {
+		// Assuming you want to convert the product name to base64
+		// Adjust this to convert the appropriate field
+		base64String, err := ConvertFileToBase64("assets/photo/products/" + product.Photo)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{"status": -1, "message": products, "base64": base64Strings})
+
+		}
+		products[i].Photo = base64String
+
+		// base64String := base64.StdEncoding.EncodeToString([]byte("assets/photo/products/"+product.Photo))
+	}
+
+	// Return the JSON response with products and their base64 encoded fields
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products})
 }
 func Show(c *gin.Context) {
 	var product models.Product //ambil model product
@@ -54,19 +158,19 @@ func Show(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": product})
 }
 
-func CreateDummy(c *gin.Context) {
+func Create(c *gin.Context) {
 
 	// Parse multipart form data
 	err := c.Request.ParseMultipartForm(10 << 20) // 10MB max size
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse multipart form"})
+		c.JSON(http.StatusBadRequest, gin.H{"status": -1, "error": "Failed to parse multipart form"})
 		return
 	}
 
 	// Access the uploaded file
 	file, err := c.FormFile("file")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "No file uploaded or invalid file field name"})
+		c.JSON(http.StatusBadRequest, gin.H{"status": -1, "error": "No file uploaded or invalid file field name"})
 		return
 	}
 
@@ -77,26 +181,44 @@ func CreateDummy(c *gin.Context) {
 	filename = filename[:len(filename)-len(ext)] + "_" + strconv.FormatInt(timestamp, 10) + ext
 
 	// Specify the destination directory
-	dest := filepath.Join("models", filename)
+	dest := filepath.Join("assets/photo/products", filename)
 
 	// Save the uploaded file to the destination directory
 	if err := c.SaveUploadedFile(file, dest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to save file"})
+		c.JSON(http.StatusBadRequest, gin.H{"status": -1, "error": "Failed to save file"})
+		return
+	}
+	NamaMenuPost := c.PostForm("nama_menu")
+	JenisMenuPost := c.PostForm("jenis_menu")
+	DeskripsiMenuPost := c.PostForm("deskripsi_menu")
+	HargaStr := c.PostForm("harga")
+
+	HargaInt, err := strconv.ParseInt(HargaStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid jenis_menu value"})
+		return
+	}
+	// Save file details to the database
+	product := models.Product{
+		Photo:         filename,
+		NamaMenu:      NamaMenuPost,
+		JenisMenu:     JenisMenuPost,
+		DeskripsiMenu: DeskripsiMenuPost,
+		Harga:         HargaInt,
+		// ContentType: file.Header.Get("Content-Type"),
+		// Add other fields from the form data as needed
+	}
+	// Assuming models.DB is your database connection
+	if err := models.DB.Create(&product).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": -1, "error": "Failed to save data to database"})
 		return
 	}
 
-	// Save file details to the database
-	upload := models.Product{
-		Photo: file.Filename,
-		// ContentType: file.Header.Get("Content-Type"),
-	}
-	models.DB.Create(&upload)
-
 	// Respond with a success message
-	c.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully"})
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": product, "message": "File uploaded successfully"})
 }
 
-func Create(c *gin.Context) {
+func CreateOld(c *gin.Context) {
 
 	var product models.Product
 
