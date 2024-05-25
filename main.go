@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/andricomauludi/backend-etalase-mornin/controllers/authcontroller"
 	"github.com/andricomauludi/backend-etalase-mornin/controllers/productcontroller"
+	"github.com/andricomauludi/backend-etalase-mornin/controllers/transactioncontroller"
 	"github.com/andricomauludi/backend-etalase-mornin/initializers"
 	"github.com/andricomauludi/backend-etalase-mornin/middleware"
 	"github.com/andricomauludi/backend-etalase-mornin/models"
@@ -32,6 +33,7 @@ func main() {
 	// api.Use(middleware.RequireAuth)
 
 	product := api.Group("/product")
+	transaction := api.Group("/transaction")
 	auth := api.Group("/auth")
 
 	// product.Use(middleware.Authorization([]int{1, 2, 4}))
@@ -48,8 +50,13 @@ func main() {
 	product.PUT("/:id", productcontroller.Update)
 	product.DELETE("/", productcontroller.Delete)
 
+	//TRANSACTION
+	transaction.POST("/create_bill", transactioncontroller.Create_bill)
+	transaction.POST("/create_detail_bill", transactioncontroller.Create_detail_bill)
+
 	r.POST("api/auth/signup", authcontroller.Signup)
 	r.POST("api/auth/login", authcontroller.Login)
+	auth.POST("/logout", middleware.RequireAuth, authcontroller.Logout)
 	auth.GET("/validate", authcontroller.Validate)
 	auth.GET("/showall", middleware.RequireAuth, authcontroller.Showall)
 	// r := gin.Default()
