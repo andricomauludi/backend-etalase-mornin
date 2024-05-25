@@ -1,4 +1,4 @@
-package productcontroller
+package transactioncontroller
 
 import (
 	"encoding/base64"
@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 
@@ -26,15 +25,16 @@ func Index(c *gin.Context) {
 	}
 
 	// Loop through the products and convert their desired fields to base64
+	var base64Strings []string
 	for i, product := range products {
 		// Assuming you want to convert the product name to base64
 		// Adjust this to convert the appropriate field
 		base64String, err := ConvertFileToBase64("assets/photo/products/" + product.Photo)
-		products[i].Photo = base64String
 		if err != nil {
-			c.JSON(http.StatusOK, gin.H{"status": -1, "message": products})
+			c.JSON(http.StatusOK, gin.H{"status": -1, "message": products, "base64": base64Strings})
 
 		}
+		products[i].Photo = base64String
 
 		// base64String := base64.StdEncoding.EncodeToString([]byte("assets/photo/products/"+product.Photo))
 	}
@@ -157,7 +157,7 @@ func Show(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": product})
 }
 
-func Create(c *gin.Context) {
+func Create_bill(c *gin.Context) {
 
 	// Parse multipart form data
 	err := c.Request.ParseMultipartForm(10 << 20) // 10MB max size
@@ -166,86 +166,154 @@ func Create(c *gin.Context) {
 		return
 	}
 
-	// Access the uploaded file
-	file, err := c.FormFile("file")
+	PaidPost := c.PostForm("paid")
+	NamaBillPost := c.PostForm("nama_bill")
+	TimestampPost := time.Now()
+	IdJenisPembayaranPost := c.PostForm("id_jenis_pembayaran")
+	JenisPembayaranPost := c.PostForm("jenis_pembayaran")
+	TotalPostStr := c.PostForm("total")
+	CashInPostStr := c.PostForm("cash_in")
+	CashOutPostStr := c.PostForm("cash_out")
+	IdKlienPostStr := c.PostForm("id_klien")
+	NamaKlienPost := c.PostForm("nama_klien")
+
+	IdKlienPost, err := strconv.ParseInt(IdKlienPostStr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": -1, "error": "No file uploaded or invalid file field name"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Total value"})
 		return
 	}
-
-	// Generate a unique filename with timestamp
-	timestamp := time.Now().UnixNano()
-	filename := file.Filename
-	ext := filepath.Ext(filename)
-	filename = filename[:len(filename)-len(ext)] + "_" + strconv.FormatInt(timestamp, 10) + ext
-
-	// Specify the destination directory
-	dest := filepath.Join("assets/photo/products", filename)
-
-	// Save the uploaded file to the destination directory
-	if err := c.SaveUploadedFile(file, dest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": -1, "error": "Failed to save file"})
+	TotalPost, err := strconv.ParseInt(TotalPostStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Total value"})
 		return
 	}
-	NamaMenuPost := c.PostForm("nama_menu")
-	JenisMenuPost := c.PostForm("jenis_menu")
-	DeskripsiMenuPost := c.PostForm("deskripsi_menu")
-	HargaStr := c.PostForm("harga")
-
-	HargaInt, err := strconv.ParseInt(HargaStr, 10, 64)
+	CashInPost, err := strconv.ParseInt(CashInPostStr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid jenis_menu value"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid cash_in value"})
+		return
+	}
+	CashOutPost, err := strconv.ParseInt(CashOutPostStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid cash_out value"})
 		return
 	}
 	// Save file details to the database
-	product := models.Product{
-		Photo:         filename,
-		NamaMenu:      NamaMenuPost,
-		JenisMenu:     JenisMenuPost,
-		DeskripsiMenu: DeskripsiMenuPost,
-		Harga:         HargaInt,
-		// ContentType: file.Header.Get("Content-Type"),
+	bill := models.Bill{
+		IdKlien:           IdKlienPost,
+		NamaKlien:         NamaKlienPost,
+		NamaBill:          NamaBillPost,
+		Paid:              PaidPost,
+		Timestamp:         TimestampPost,
+		IdJenisPembayaran: IdJenisPembayaranPost,
+		JenisPembayaran:   JenisPembayaranPost,
+		Total:             TotalPost,
+		CashIn:            CashInPost,
+		CashOut:           CashOutPost,
+
 		// Add other fields from the form data as needed
 	}
 	// Assuming models.DB is your database connection
-	if err := models.DB.Create(&product).Error; err != nil {
+	if err := models.DB.Create(&bill).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"status": -1, "error": "Failed to save data to database"})
 		return
 	}
 
 	// Respond with a success message
-	c.JSON(http.StatusOK, gin.H{"status": 1, "data": product, "message": "File uploaded successfully"})
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": bill, "message": "Your bill is successfully created!"})
 }
+func Create_detail_bill(c *gin.Context) {
 
-func CreateOld(c *gin.Context) {
-
-	var product models.Product
-
-	if err := c.ShouldBindJSON(&product); err != nil { //create menggunakan input json sehinggap pengecekan juga menggunakan json
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": err.Error()})
+	// Parse multipart form data
+	err := c.Request.ParseMultipartForm(10 << 20) // 10MB max size
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": -1, "error": "Failed to parse multipart form"})
 		return
 	}
 
-	models.DB.Create(&product)
-	c.JSON(http.StatusOK, gin.H{"status": 1, "data": "Item created successfully!"})
+	IdBillPostStr := c.PostForm("id_bill")
+	IdMenuPostStr := c.PostForm("id_menu")
+	NamaMenuPost := c.PostForm("nama_menu")
+	HargaPostStr := c.PostForm("harga")
+	JumlahPostStr := c.PostForm("jumlah")
+	TotalHargaPostStr := c.PostForm("total_harga")
+
+	IdBillPost, err := strconv.ParseInt(IdBillPostStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Total value"})
+		return
+	}
+	IdMenuPost, err := strconv.ParseInt(IdMenuPostStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Total value"})
+		return
+	}
+	HargaPost, err := strconv.ParseInt(HargaPostStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Total value"})
+		return
+	}
+	JumlahPost, err := strconv.ParseInt(JumlahPostStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Total value"})
+		return
+	}
+	TotalHargaPost, err := strconv.ParseInt(TotalHargaPostStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid cash_in value"})
+		return
+	}
+
+	// Save file details to the database
+	detail_bill := models.Detail_bill{
+		IdBill:     IdBillPost,
+		IdMenu:     IdMenuPost,
+		NamaMenu:   NamaMenuPost,
+		Harga:      HargaPost,
+		Jumlah:     JumlahPost,
+		TotalHarga: TotalHargaPost,
+	}
+	// Assuming models.DB is your database connection
+	if err := models.DB.Create(&detail_bill).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": -1, "error": "Failed to save data to database"})
+		return
+	}
+
+	// Respond with a success message
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": detail_bill, "message": "Your detail bill is successfully created!"})
 }
-func Update(c *gin.Context) {
-	var product models.Product
+
+func Update_detail_bill(c *gin.Context) {
+	var detail_bill models.Detail_bill
 	id := c.Param("id") //mengambil params dari url yg disediakan main.go
 
-	if err := c.ShouldBindJSON(&product); err != nil { //create menggunakan input json sehinggap pengecekan juga menggunakan json
+	if err := c.ShouldBindJSON(&detail_bill); err != nil { //create menggunakan input json sehinggap pengecekan juga menggunakan json
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": err.Error()})
 		return
 	}
 
-	if models.DB.Model(&product).Where("id = ?", id).Updates(&product).RowsAffected == 0 { //mengecek apakah id yg diinput ada di database atau tidak
+	if models.DB.Model(&detail_bill).Where("id = ?", id).Updates(&detail_bill).RowsAffected == 0 { //mengecek apakah id yg diinput ada di database atau tidak
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": "Data is not found"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": "Data updated"}) //mengembalikan status yg benar
 }
-func Delete(c *gin.Context) {
-	var product models.Product
+func Update_bill(c *gin.Context) {
+	var bill models.Bill
+	id := c.Param("id") //mengambil params dari url yg disediakan main.go
+
+	if err := c.ShouldBindJSON(&bill); err != nil { //create menggunakan input json sehinggap pengecekan juga menggunakan json
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": err.Error()})
+		return
+	}
+
+	if models.DB.Model(&bill).Where("id = ?", id).Updates(&bill).RowsAffected == 0 { //mengecek apakah id yg diinput ada di database atau tidak
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": "Data is not found"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": "Data updated"}) //mengembalikan status yg benar
+}
+func Delete_bill(c *gin.Context) {
+	var bill models.Bill
 
 	var input struct {
 		Id json.Number
@@ -259,8 +327,29 @@ func Delete(c *gin.Context) {
 
 	id, _ := input.Id.Int64()
 
-	if models.DB.Delete(&product, id).RowsAffected == 0 {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": "Product is not found"})
+	if models.DB.Delete(&bill, id).RowsAffected == 0 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": "Bill is not found"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": "Data deleted successfully"})
+}
+func Delete_detail_bill(c *gin.Context) {
+	var detail_bill models.Detail_bill
+
+	var input struct {
+		Id json.Number
+	}
+	// id, _ := strconv.ParseInt(input["id"], 10, 64) //melakukan perubahan string to integer, dengan ukuran integer 10 dan size integer 64
+
+	if err := c.ShouldBindJSON(&input); err != nil { //create menggunakan input json sehinggap pengecekan juga menggunakan json
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": err.Error()})
+		return
+	}
+
+	id, _ := input.Id.Int64()
+
+	if models.DB.Delete(&detail_bill, id).RowsAffected == 0 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": "Detail bill is not found"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": "Data deleted successfully"})

@@ -180,6 +180,13 @@ func Login(c *gin.Context) {
 	})
 }
 
+func Logout(c *gin.Context) {
+	// Set the cookie with MaxAge -1 to delete it
+	c.SetCookie("Authorization", "", -1, "", "", false, true)
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": "You are Logged Out!"})
+
+}
+
 func Validate(c *gin.Context) {
 	user, _ := c.Get("user")
 
