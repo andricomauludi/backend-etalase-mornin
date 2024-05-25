@@ -61,84 +61,45 @@ func ConvertFileToBase64(filePath string) (string, error) {
 
 	return base64String, nil
 }
-func Show_makanan(c *gin.Context) {
+func Show_transaction(c *gin.Context) {
 
-	var products []models.Product //array dan ambil model product
+	var bill []models.Bill               //array dan ambil model product
+	var detail_bill []models.Detail_bill //array dan ambil model product
 
-	if err := models.DB.Find(&products, "jenis_menu = ?", "makanan").Error; err != nil {
+	// UserResponse struct represents the custom JSON response
+	type BillResponse struct {
+		Bill        models.Bill
+		Detail_bill []models.Detail_bill
+	}
+
+	// if err := models.DB.Find(&bill, "jenis_menu = ?", "makanan").Error; err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	// 	return
+	// }
+	if err := models.DB.Find(&bill).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Loop through the products and convert their desired fields to base64
-	var base64Strings []string
-	for i, product := range products {
+	var billResponses []BillResponse
+	for i, _ := range bill {
 		// Assuming you want to convert the product name to base64
 		// Adjust this to convert the appropriate field
-		base64String, err := ConvertFileToBase64("assets/photo/products/" + product.Photo)
-		if err != nil {
-			c.JSON(http.StatusOK, gin.H{"status": -1, "message": products, "base64": base64Strings})
-
+		if err := models.DB.Find(&detail_bill, "id_bill = ?", bill[i].Id).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
-		products[i].Photo = base64String
+		response := BillResponse{
+			Bill:        bill[i],
+			Detail_bill: detail_bill,
+		}
+		billResponses = append(billResponses, response)
 
-		// base64String := base64.StdEncoding.EncodeToString([]byte("assets/photo/products/"+product.Photo))
 	}
 
 	// Return the JSON response with products and their base64 encoded fields
-	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products})
-}
-func Show_cemilan(c *gin.Context) {
-
-	var products []models.Product //array dan ambil model product
-	if err := models.DB.Find(&products, "jenis_menu = ?", "cemilan").Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Loop through the products and convert their desired fields to base64
-	var base64Strings []string
-	for i, product := range products {
-		// Assuming you want to convert the product name to base64
-		// Adjust this to convert the appropriate field
-		base64String, err := ConvertFileToBase64("assets/photo/products/" + product.Photo)
-		if err != nil {
-			c.JSON(http.StatusOK, gin.H{"status": -1, "message": products, "base64": base64Strings})
-
-		}
-		products[i].Photo = base64String
-
-		// base64String := base64.StdEncoding.EncodeToString([]byte("assets/photo/products/"+product.Photo))
-	}
-
-	// Return the JSON response with products and their base64 encoded fields
-	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products})
-}
-func Show_minuman(c *gin.Context) {
-
-	var products []models.Product //array dan ambil model product
-	if err := models.DB.Find(&products, "jenis_menu = ?", "minuman").Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Loop through the products and convert their desired fields to base64
-	var base64Strings []string
-	for i, product := range products {
-		// Assuming you want to convert the product name to base64
-		// Adjust this to convert the appropriate field
-		base64String, err := ConvertFileToBase64("assets/photo/products/" + product.Photo)
-		if err != nil {
-			c.JSON(http.StatusOK, gin.H{"status": -1, "message": products, "base64": base64Strings})
-
-		}
-		products[i].Photo = base64String
-
-		// base64String := base64.StdEncoding.EncodeToString([]byte("assets/photo/products/"+product.Photo))
-	}
-
-	// Return the JSON response with products and their base64 encoded fields
-	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products})
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": billResponses})
 }
 func Show(c *gin.Context) {
 	var product models.Product //ambil model product
