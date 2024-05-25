@@ -53,6 +53,7 @@ func main() {
 	//TRANSACTION
 	transaction.POST("/create_bill", transactioncontroller.Create_bill)
 	transaction.POST("/create_detail_bill", transactioncontroller.Create_detail_bill)
+	transaction.GET("/show_transaction", transactioncontroller.Show_transaction)
 
 	r.POST("api/auth/signup", authcontroller.Signup)
 	r.POST("api/auth/login", authcontroller.Login)
