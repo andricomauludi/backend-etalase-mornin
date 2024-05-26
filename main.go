@@ -53,7 +53,14 @@ func main() {
 	//TRANSACTION
 	transaction.POST("/create_bill", transactioncontroller.Create_bill)
 	transaction.POST("/create_detail_bill", transactioncontroller.Create_detail_bill)
+	transaction.POST("/create_klien", transactioncontroller.Create_klien)
 	transaction.GET("/show_transaction", transactioncontroller.Show_transaction)
+	transaction.PUT("/edit_bill/:id", transactioncontroller.Update_bill)
+	transaction.PUT("/edit_detail_bill/:id", transactioncontroller.Update_detail_bill)
+	transaction.PUT("/edit_klien/:id", transactioncontroller.Update_klien)
+	transaction.DELETE("/delete_bill", transactioncontroller.Delete_bill)
+	transaction.DELETE("/delete_detail_bill", transactioncontroller.Delete_detail_bill)
+	transaction.DELETE("/delete_klien", transactioncontroller.Delete_klien)
 
 	r.POST("api/auth/signup", authcontroller.Signup)
 	r.POST("api/auth/login", authcontroller.Login)
