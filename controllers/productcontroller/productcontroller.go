@@ -32,7 +32,7 @@ func Index(c *gin.Context) {
 		base64String, err := ConvertFileToBase64("assets/photo/products/" + product.Photo)
 		products[i].Photo = base64String
 		if err != nil {
-			c.JSON(http.StatusOK, gin.H{"status": -1, "message": products})
+			c.Next()
 
 		}
 
