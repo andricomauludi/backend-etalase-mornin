@@ -101,6 +101,62 @@ func Show_transaction(c *gin.Context) {
 	// Return the JSON response with products and their base64 encoded fields
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": billResponses})
 }
+func Show_saved_bill(c *gin.Context) {
+
+	var bill []models.Bill               //array dan ambil model product
+	var detail_bill []models.Detail_bill //array dan ambil model product
+
+	// UserResponse struct represents the custom JSON response
+	type BillResponse struct {
+		Bill        models.Bill
+		Detail_bill []models.Detail_bill
+	}
+
+	// if err := models.DB.Find(&bill, "jenis_menu = ?", "makanan").Error; err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	// 	return
+	// }
+	if err := models.DB.Find(&bill, "paid = ?", 0).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Loop through the products and convert their desired fields to base64
+	var billResponses []BillResponse
+	for i, _ := range bill {
+		// Assuming you want to convert the product name to base64
+		// Adjust this to convert the appropriate field
+		if err := models.DB.Find(&detail_bill, "id_bill = ?", bill[i].Id).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		response := BillResponse{
+			Bill:        bill[i],
+			Detail_bill: detail_bill,
+		}
+		billResponses = append(billResponses, response)
+
+	}
+
+	// Return the JSON response with products and their base64 encoded fields
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": billResponses})
+}
+func Show_detail_bill(c *gin.Context) {
+	var detail_bill []models.Detail_bill //ambil model product
+	id := c.Param("id")                  //ngambil params dari URL main.go
+
+	if err := models.DB.Find(&detail_bill, "id_bill = ?", id).Error; err != nil { //mencari 1 data yg memiliki id yg sama dengan yg dicari, apabila tidak dapat maka masuk ke if ini(error)
+		switch err {
+		case gorm.ErrRecordNotFound: //apabila tidak terdapat error record
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"status": 0, "data": "ERROR data not found"})
+			return
+		default: //apabilla terdapat error record, mengembalikan data dengan error record
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"status": -1, "data": err.Error})
+			return
+		}
+	}
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": detail_bill})
+}
 func Show(c *gin.Context) {
 	var product models.Product //ambil model product
 	id := c.Param("id")        //ngambil params dari URL main.go
@@ -118,8 +174,7 @@ func Show(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": product})
 }
 
-func Create_bill(c *gin.Context) {
-
+func CreateOrUpdateBill(c *gin.Context) {
 	// Parse multipart form data
 	err := c.Request.ParseMultipartForm(10 << 20) // 10MB max size
 	if err != nil {
@@ -127,10 +182,10 @@ func Create_bill(c *gin.Context) {
 		return
 	}
 
+	IdStr := c.PostForm("id")
 	PaidPost := c.PostForm("paid")
 	NamaBillPost := c.PostForm("nama_bill")
 	TimestampPost := time.Now()
-	IdJenisPembayaranPost := c.PostForm("id_jenis_pembayaran")
 	JenisPembayaranPost := c.PostForm("jenis_pembayaran")
 	TotalPostStr := c.PostForm("total")
 	CashInPostStr := c.PostForm("cash_in")
@@ -138,9 +193,14 @@ func Create_bill(c *gin.Context) {
 	IdKlienPostStr := c.PostForm("id_klien")
 	NamaKlienPost := c.PostForm("nama_klien")
 
+	Id, err := strconv.ParseInt(IdStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid id value"})
+		return
+	}
 	IdKlienPost, err := strconv.ParseInt(IdKlienPostStr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Total value"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid IdKlien value"})
 		return
 	}
 	TotalPost, err := strconv.ParseInt(TotalPostStr, 10, 64)
@@ -158,30 +218,64 @@ func Create_bill(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid cash_out value"})
 		return
 	}
-	// Save file details to the database
-	bill := models.Bill{
-		IdKlien:           IdKlienPost,
-		NamaKlien:         NamaKlienPost,
-		NamaBill:          NamaBillPost,
-		Paid:              PaidPost,
-		Timestamp:         TimestampPost,
-		IdJenisPembayaran: IdJenisPembayaranPost,
-		JenisPembayaran:   JenisPembayaranPost,
-		Total:             TotalPost,
-		CashIn:            CashInPost,
-		CashOut:           CashOutPost,
 
-		// Add other fields from the form data as needed
-	}
-	// Assuming models.DB is your database connection
-	if err := models.DB.Create(&bill).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": -1, "error": "Failed to save data to database"})
-		return
-	}
+	var bill models.Bill
+	if Id != 0 {
+		// Check if the bill with the given ID exists
+		if err := models.DB.Where("id = ?", Id).First(&bill).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				// Bill with given ID does not exist
+				c.JSON(http.StatusNotFound, gin.H{"status": -1, "error": "Bill not found"})
+				return
+			}
+			// Some other error occurred
+			c.JSON(http.StatusInternalServerError, gin.H{"status": -1, "error": "Failed to query database"})
+			return
+		}
 
-	// Respond with a success message
-	c.JSON(http.StatusOK, gin.H{"status": 1, "data": bill, "message": "Your bill is successfully created!"})
+		// Bill exists, update it
+		bill.NamaKlien = NamaKlienPost
+		bill.NamaBill = NamaBillPost
+		bill.Paid = PaidPost
+		bill.Timestamp = TimestampPost
+		bill.JenisPembayaran = JenisPembayaranPost
+		bill.Total = TotalPost
+		bill.CashIn = CashInPost
+		bill.CashOut = CashOutPost
+		bill.IdKlien = IdKlienPost
+		bill.NamaKlien = NamaKlienPost
+
+		if err := models.DB.Save(&bill).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"status": -1, "error": "Failed to update data in database"})
+			return
+		}
+
+		// Respond with a success message
+		c.JSON(http.StatusOK, gin.H{"status": 1, "data": bill, "message": "Your bill is successfully updated!"})
+	} else {
+		// Bill does not exist, create a new one
+		bill = models.Bill{
+			IdKlien:         IdKlienPost,
+			NamaKlien:       NamaKlienPost,
+			NamaBill:        NamaBillPost,
+			Paid:            PaidPost,
+			Timestamp:       TimestampPost,
+			JenisPembayaran: JenisPembayaranPost,
+			Total:           TotalPost,
+			CashIn:          CashInPost,
+			CashOut:         CashOutPost,
+		}
+
+		if err := models.DB.Create(&bill).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"status": -1, "error": "Failed to save data to database"})
+			return
+		}
+
+		// Respond with a success message
+		c.JSON(http.StatusOK, gin.H{"status": 1, "data": bill, "message": "Your bill is successfully created!"})
+	}
 }
+
 func Create_detail_bill(c *gin.Context) {
 
 	// Parse multipart form data
@@ -242,6 +336,22 @@ func Create_detail_bill(c *gin.Context) {
 	// Respond with a success message
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": detail_bill, "message": "Your detail bill is successfully created!"})
 }
+
+func Create_detail_bill2(c *gin.Context) {
+	var detail_bill []models.Detail_bill
+
+	if err := c.ShouldBindJSON(&detail_bill); err != nil { //create menggunakan input json sehinggap pengecekan juga menggunakan json
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": err.Error()})
+		return
+	}
+
+	if err := models.DB.Create(&detail_bill).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": -1, "error": "Failed to save data to database"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": detail_bill, "message": "Your detail bill is successfully created!"})
+}
+
 func Create_klien(c *gin.Context) {
 
 	// Parse multipart form data
@@ -272,6 +382,7 @@ func Create_klien(c *gin.Context) {
 	// Respond with a success message
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": klien, "message": "Your klien data is successfully created!"})
 }
+
 func Update_detail_bill(c *gin.Context) {
 	var detail_bill models.Detail_bill
 	id := c.Param("id") //mengambil params dari url yg disediakan main.go
@@ -317,7 +428,7 @@ func Update_klien(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": "Data updated"}) //mengembalikan status yg benar
 }
-func Delete_bill(c *gin.Context) {
+func Delete_bill_old(c *gin.Context) {
 	var bill models.Bill
 
 	var input struct {
@@ -359,6 +470,62 @@ func Delete_detail_bill(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": "Data deleted successfully"})
 }
+
+func Delete_bill(c *gin.Context) {
+	var bill models.Bill
+
+	err := c.Request.ParseMultipartForm(10 << 20) // 10MB max size
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": -1, "error": "Failed to parse multipart form"})
+		return
+	}
+
+	IdPostStr := c.PostForm("id")
+
+	id, err := strconv.ParseInt(IdPostStr, 10, 64)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": "Invalid bill ID"})
+		return
+	}
+
+	// Begin a transaction
+	tx := models.DB.Begin()
+	if tx.Error != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"status": -1, "data": "Failed to start transaction"})
+		return
+	}
+
+	// Find the bill
+	if err := tx.Where("id = ?", id).First(&bill).Error; err != nil {
+		tx.Rollback()
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": "Bill not found"})
+		return
+	}
+
+	// Delete associated detail bills
+	if err := tx.Where("id_bill = ?", id).Delete(&models.Detail_bill{}).Error; err != nil {
+		tx.Rollback()
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"status": -1, "data": "Failed to delete detail bills"})
+		return
+	}
+
+	// Delete the bill
+	if err := tx.Delete(&bill).Error; err != nil {
+		tx.Rollback()
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"status": -1, "data": "Failed to delete bill"})
+		return
+	}
+
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"status": -1, "data": "Failed to commit transaction"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": "Data deleted successfully"})
+}
+
 func Delete_klien(c *gin.Context) {
 	var klien models.Klien
 
