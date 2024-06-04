@@ -44,6 +44,7 @@ func main() {
 	r.GET("/api/product/makanan", productcontroller.Show_makanan)
 	r.GET("/api/product/minuman", productcontroller.Show_minuman)
 	r.GET("/api/product/cemilan", productcontroller.Show_cemilan)
+	r.GET("/api/product/barbershop", productcontroller.Show_barbershop)
 	r.GET("/api/product/:id", productcontroller.Show) //terdapat id yg params nya dapat diambil oleh controller
 	product.POST("/create", productcontroller.Create)
 	// product.POST("/base64convert", productcontroller.Base64converter)
@@ -51,14 +52,17 @@ func main() {
 	product.DELETE("/", productcontroller.Delete)
 
 	//TRANSACTION
-	transaction.POST("/create_bill", transactioncontroller.Create_bill)
+	transaction.POST("/create_bill", transactioncontroller.CreateOrUpdateBill)
 	transaction.POST("/create_detail_bill", transactioncontroller.Create_detail_bill)
+	transaction.POST("/create_detail_bill_json", transactioncontroller.Create_detail_bill2)
 	transaction.POST("/create_klien", transactioncontroller.Create_klien)
 	transaction.GET("/show_transaction", transactioncontroller.Show_transaction)
+	transaction.GET("/show_detail_bill/:id", transactioncontroller.Show_detail_bill)
+	transaction.GET("/show_saved_bill", transactioncontroller.Show_saved_bill)
 	transaction.PUT("/edit_bill/:id", transactioncontroller.Update_bill)
 	transaction.PUT("/edit_detail_bill/:id", transactioncontroller.Update_detail_bill)
 	transaction.PUT("/edit_klien/:id", transactioncontroller.Update_klien)
-	transaction.DELETE("/delete_bill", transactioncontroller.Delete_bill)
+	transaction.POST("/delete_bill", transactioncontroller.Delete_bill)
 	transaction.DELETE("/delete_detail_bill", transactioncontroller.Delete_detail_bill)
 	transaction.DELETE("/delete_klien", transactioncontroller.Delete_klien)
 
