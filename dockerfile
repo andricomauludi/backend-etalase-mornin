@@ -14,11 +14,10 @@
 
 FROM golang:1.10.5-alpine3.8
 
- 
 
 WORKDIR /go/src/app
 
-COPY maingo.go .
+COPY main.go .
 
 RUN go build -o main .
 
