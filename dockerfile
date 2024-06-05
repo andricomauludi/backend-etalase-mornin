@@ -1,13 +1,27 @@
-FROM golang:alpine
+# FROM golang:alpine
 
-RUN apk update && apk add --no-cache git
+# RUN apk update && apk add --no-cache git
 
-WORKDIR /app
+# WORKDIR /app
 
-COPY . .
+# COPY . .
 
-RUN go mod tidy
+# RUN go mod tidy
 
-RUN go build -o binary
+# RUN go build -o binary
 
-ENTRYPOINT ["/app/binary"]
+# ENTRYPOINT ["/app/binary"]
+
+FROM golang:1.10.5-alpine3.8
+
+ 
+
+WORKDIR /go/src/app
+
+COPY maingo.go .
+
+RUN go build -o main .
+
+EXPOSE 8090
+
+CMD [“./main”]
