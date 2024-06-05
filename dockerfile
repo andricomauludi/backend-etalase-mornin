@@ -1,26 +1,13 @@
-# FROM golang:alpine
+FROM golang:1.18-bullseye
 
-# RUN apk update && apk add --no-cache git
+RUN go install github.com/beego/bee/v2@latest
 
-# WORKDIR /app
+ENV GO111MODULE=on
+ENV GOFLAGS=-mod=vendor
 
-# COPY . .
+ENV APP_HOME /go/src/go-backend-etalase-mornin
+RUN mkdir -p "$APP_HOME"
 
-# RUN go mod tidy
-
-# RUN go build -o binary
-
-# ENTRYPOINT ["/app/binary"]
-
-FROM golang:1.10.5-alpine3.8
-
-
-WORKDIR /go/src/app
-
-COPY main.go .
-
-RUN go build -o main .
-
-EXPOSE 8090
-
-CMD [“./main”]
+WORKDIR "$APP_HOME"
+EXPOSE 8010
+CMD ["bee", "run"]
