@@ -1,6 +1,8 @@
 package models
 
 import (
+	"os"
+
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -8,7 +10,7 @@ import (
 var DB *gorm.DB //menggunakan gorm db dalam koneksi db
 
 func ConnectDatabase() {
-	database, err := gorm.Open(mysql.Open("root:@tcp(127.0.0.1:3306)/go-backend-etalase-mornin?parseTime=true")) //membuka rute mysql (ini untuk local)
+	database, err := gorm.Open(mysql.Open(os.Getenv("DATABASE_PORT"))) //membuka rute mysql (ini untuk local)
 	if err != nil {
 		panic(err) //mengembalikan error apabila terdapat eror
 	}
