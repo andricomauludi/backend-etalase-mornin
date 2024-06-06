@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/andricomauludi/backend-etalase-mornin/models"
+	"github.com/andricomauludi/backend-etalase-mornin/tree/main/models"
 	"golang.org/x/crypto/bcrypt"
 )
 

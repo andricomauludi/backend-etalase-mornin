@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/andricomauludi/backend-etalase-mornin/models"
+	"github.com/andricomauludi/backend-etalase-mornin/tree/main/models"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
