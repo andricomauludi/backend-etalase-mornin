@@ -9,5 +9,5 @@ ENV APP_HOME /go/src/go-backend-etalase-mornin
 RUN mkdir -p "$APP_HOME"
 
 WORKDIR "$APP_HOME"
-EXPOSE 8010
+EXPOSE 8090
 CMD ["bee", "run"]
