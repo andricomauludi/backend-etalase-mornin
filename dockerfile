@@ -1,13 +1,27 @@
-FROM golang:1.18-bullseye
+# syntax=docker/dockerfile:1
 
-RUN go install github.com/beego/bee/v2@latest
+FROM golang:1.19
 
-ENV GO111MODULE=on
-ENV GOFLAGS=-mod=vendor
+# Set destination for COPY
+WORKDIR /app
 
-ENV APP_HOME /go/src/go-backend-etalase-mornin
-RUN mkdir -p "$APP_HOME"
+# Download Go modules
+COPY go.mod go.sum ./
+RUN go mod download
 
-WORKDIR "$APP_HOME"
+# Copy the source code. Note the slash at the end, as explained in
+# https://docs.docker.com/reference/dockerfile/#copy
+COPY *.go ./
+
+# Build
+RUN CGO_ENABLED=0 GOOS=linux go build -o /docker-gs-ping
+
+# Optional:
+# To bind to a TCP port, runtime parameters must be supplied to the docker command.
+# But we can document in the Dockerfile what ports
+# the application is going to listen on by default.
+# https://docs.docker.com/reference/dockerfile/#expose
 EXPOSE 8090
-CMD ["bee", "run"]
+
+# Run
+CMD ["/docker-gs-ping"]
