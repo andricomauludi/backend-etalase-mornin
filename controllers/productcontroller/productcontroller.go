@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/andricomauludi/backend-etalase-mornin/models"
+	"github.com/andricomauludi/backend-etalase-mornin/tree/main/models"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -26,16 +26,15 @@ func Index(c *gin.Context) {
 	}
 
 	// Loop through the products and convert their desired fields to base64
-	var base64Strings []string
 	for i, product := range products {
 		// Assuming you want to convert the product name to base64
 		// Adjust this to convert the appropriate field
 		base64String, err := ConvertFileToBase64("assets/photo/products/" + product.Photo)
+		products[i].Photo = base64String
 		if err != nil {
-			c.JSON(http.StatusOK, gin.H{"status": -1, "message": products, "base64": base64Strings})
+			c.Next()
 
 		}
-		products[i].Photo = base64String
 
 		// base64String := base64.StdEncoding.EncodeToString([]byte("assets/photo/products/"+product.Photo))
 	}
@@ -67,6 +66,33 @@ func Show_makanan(c *gin.Context) {
 	var products []models.Product //array dan ambil model product
 
 	if err := models.DB.Find(&products, "jenis_menu = ?", "makanan").Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Loop through the products and convert their desired fields to base64
+	var base64Strings []string
+	for i, product := range products {
+		// Assuming you want to convert the product name to base64
+		// Adjust this to convert the appropriate field
+		base64String, err := ConvertFileToBase64("assets/photo/products/" + product.Photo)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{"status": -1, "message": products, "base64": base64Strings})
+
+		}
+		products[i].Photo = base64String
+
+		// base64String := base64.StdEncoding.EncodeToString([]byte("assets/photo/products/"+product.Photo))
+	}
+
+	// Return the JSON response with products and their base64 encoded fields
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products})
+}
+func Show_barbershop(c *gin.Context) {
+
+	var products []models.Product //array dan ambil model product
+
+	if err := models.DB.Find(&products, "jenis_menu = ?", "barbershop").Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
