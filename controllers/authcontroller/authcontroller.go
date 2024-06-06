@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/andricomauludi/backend-etalase-mornin/tree/main/models"
+	"github.com/andricomauludi/backend-etalase-mornin/models"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"

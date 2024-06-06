@@ -14,12 +14,12 @@ RUN go mod download
 COPY *.go ./
 
 # Build
-RUN go get github.com/andricomauludi/backend-etalase-mornin/tree/main/controllers/authcontroller
-RUN go get github.com/andricomauludi/backend-etalase-mornin/tree/main/controllers/productcontroller
-RUN go get github.com/andricomauludi/backend-etalase-mornin/tree/main/controllers/transactioncontroller
-RUN go get github.com/andricomauludi/backend-etalase-mornin/tree/main/initializers
-RUN go get github.com/andricomauludi/backend-etalase-mornin/tree/main/middleware
-RUN go get github.com/andricomauludi/backend-etalase-mornin/tree/main/models
+RUN go get github.com/andricomauludi/backend-etalase-mornin/controllers/authcontroller
+RUN go get github.com/andricomauludi/backend-etalase-mornin/controllers/productcontroller
+RUN go get github.com/andricomauludi/backend-etalase-mornin/controllers/transactioncontroller
+RUN go get github.com/andricomauludi/backend-etalase-mornin/initializers
+RUN go get github.com/andricomauludi/backend-etalase-mornin/middleware
+RUN go get github.com/andricomauludi/backend-etalase-mornin/models
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /docker-gs-ping
 

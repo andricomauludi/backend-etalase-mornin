@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/andricomauludi/backend-etalase-mornin/tree/main/controllers/authcontroller"
-	"github.com/andricomauludi/backend-etalase-mornin/tree/main/controllers/productcontroller"
-	"github.com/andricomauludi/backend-etalase-mornin/tree/main/controllers/transactioncontroller"
-	"github.com/andricomauludi/backend-etalase-mornin/tree/main/initializers"
-	"github.com/andricomauludi/backend-etalase-mornin/tree/main/middleware"
-	"github.com/andricomauludi/backend-etalase-mornin/tree/main/models"
+	"github.com/andricomauludi/backend-etalase-mornin/controllers/authcontroller"
+	"github.com/andricomauludi/backend-etalase-mornin/controllers/productcontroller"
+	"github.com/andricomauludi/backend-etalase-mornin/controllers/transactioncontroller"
+	"github.com/andricomauludi/backend-etalase-mornin/initializers"
+	"github.com/andricomauludi/backend-etalase-mornin/middleware"
+	"github.com/andricomauludi/backend-etalase-mornin/models"
 	"github.com/gin-gonic/gin"
 )
 

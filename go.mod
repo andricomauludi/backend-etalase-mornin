@@ -1,4 +1,4 @@
-module github.com/andricomauludi/backend-etalase-mornin/tree/main
+module github.com/andricomauludi/backend-etalase-mornin
 
 go 1.20
 
