@@ -10,8 +10,6 @@ COPY go.mod go.sum ./
 # Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
 RUN go mod download
 
-RUN go mod vendor 
-
 # Copy the source from the current directory to the Working Directory inside the container
 COPY . .
 
@@ -25,6 +23,9 @@ WORKDIR /root/
 
 # Copy the Pre-built binary file from the previous stage
 COPY --from=builder /docker-gs-ping .
+
+# Copy the .env file
+COPY .env .env
 
 # Expose port 8080 to the outside world
 EXPOSE 8090
