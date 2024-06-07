@@ -11,19 +11,18 @@ import (
 var DB *gorm.DB //menggunakan gorm db dalam koneksi db
 
 func ConnectDatabase() {
-	dsn := os.Getenv("DATABASE_PORT")
-	if dsn == "" {
-		log.Fatal("DATABASE_PORT environment variable is not set")
-	}
+	dsn := os.Getenv("DATABASE_USER") + ":" + os.Getenv("DATABASE_PASSWORD") +
+		"@tcp(" + os.Getenv("DATABASE_HOST") + ")/" +
+		os.Getenv("DATABASE_NAME") + "?charset=utf8mb4&parseTime=True&loc=Local"
 
 	database, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatal("Failed to connect to the database: ", err)
+		log.Fatalf("Failed to connect to the database: %v", err)
 	}
 
 	err = database.AutoMigrate(&Product{}, &User{}, &Bill{}, &Detail_bill{}, &Klien{}, &Counter{})
 	if err != nil {
-		log.Fatal("Failed to migrate database: ", err)
+		log.Fatalf("Failed to migrate database: %v", err)
 	}
 
 	DB = database
