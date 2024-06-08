@@ -27,10 +27,10 @@ FROM alpine:latest
 
 WORKDIR /app
 
-RUN ls -la /app
 
 # Copy the Pre-built binary file from the previous stage
 COPY --from=builder /app/pos-backend .
+RUN ls -la /app
 
 # Copy the .env file
 COPY .env .env
