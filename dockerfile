@@ -11,6 +11,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 # Copy the source from the current directory to the Working Directory inside the container
+COPY vendor/ ./vendor/
 COPY . .
 
 # Build the Go app

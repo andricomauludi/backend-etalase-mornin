@@ -77,7 +77,7 @@ func Show_makanan(c *gin.Context) {
 		// Adjust this to convert the appropriate field
 		base64String, err := ConvertFileToBase64("assets/photo/products/" + product.Photo)
 		if err != nil {
-			c.JSON(http.StatusOK, gin.H{"status": -1, "message": products, "base64": base64Strings})
+			c.JSON(http.StatusOK, gin.H{"status": -1, "message": "error on base 64", "base64": base64Strings, "data": products})
 
 		}
 		products[i].Photo = base64String
@@ -104,7 +104,7 @@ func Show_barbershop(c *gin.Context) {
 		// Adjust this to convert the appropriate field
 		base64String, err := ConvertFileToBase64("assets/photo/products/" + product.Photo)
 		if err != nil {
-			c.JSON(http.StatusOK, gin.H{"status": -1, "message": products, "base64": base64Strings})
+			c.JSON(http.StatusOK, gin.H{"status": -1, "message": "error on base 64", "base64": base64Strings, "data": products})
 
 		}
 		products[i].Photo = base64String
@@ -130,7 +130,7 @@ func Show_cemilan(c *gin.Context) {
 		// Adjust this to convert the appropriate field
 		base64String, err := ConvertFileToBase64("assets/photo/products/" + product.Photo)
 		if err != nil {
-			c.JSON(http.StatusOK, gin.H{"status": -1, "message": products, "base64": base64Strings})
+			c.JSON(http.StatusOK, gin.H{"status": -1, "message": "error on base 64", "base64": base64Strings, "data": products})
 
 		}
 		products[i].Photo = base64String
@@ -156,7 +156,7 @@ func Show_minuman(c *gin.Context) {
 		// Adjust this to convert the appropriate field
 		base64String, err := ConvertFileToBase64("assets/photo/products/" + product.Photo)
 		if err != nil {
-			c.JSON(http.StatusOK, gin.H{"status": -1, "message": products, "base64": base64Strings})
+			c.JSON(http.StatusOK, gin.H{"status": -1, "message": "error on base 64", "base64": base64Strings, "data": products})
 
 		}
 		products[i].Photo = base64String
