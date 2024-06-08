@@ -2,7 +2,7 @@
 FROM golang:1.20-alpine AS builder
 
 # Set the Current Working Directory inside the container
-WORKDIR /app/
+WORKDIR /app
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./
@@ -26,6 +26,8 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /pos-backend
 FROM alpine:latest
 
 WORKDIR /app
+
+RUN ls -la /app
 
 # Copy the Pre-built binary file from the previous stage
 COPY --from=builder /app/pos-backend .
