@@ -14,6 +14,10 @@ RUN go mod download
 COPY vendor/ ./vendor/
 COPY . .
 
+
+# Copy the assets
+COPY assets/ /app/assets/
+
 # Build the Go app
 RUN CGO_ENABLED=0 GOOS=linux go build -o /docker-gs-ping
 
