@@ -62,6 +62,9 @@ func ConvertFileToBase64(filePath string) (string, error) {
 
 	// Convert file content to base64
 	base64String := base64.StdEncoding.EncodeToString(fileBytes)
+	if base64String == "" {
+		return "", fmt.Errorf("failed to encode file to base64")
+	}
 
 	return base64String, nil
 }
