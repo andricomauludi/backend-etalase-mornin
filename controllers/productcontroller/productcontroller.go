@@ -3,6 +3,7 @@ package productcontroller
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -44,20 +45,28 @@ func Index(c *gin.Context) {
 }
 func ConvertFileToBase64(filePath string) (string, error) {
 	// Open the file
+	fmt.Println("Attempting to open file at path:", filePath)
+
+	// Open the file
 	file, err := os.Open(filePath)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to open file: %v", err)
 	}
 	defer file.Close()
 
 	// Read file content into a byte slice
 	fileBytes, err := ioutil.ReadAll(file)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to read file: %v", err)
 	}
 
 	// Convert file content to base64
 	base64String := base64.StdEncoding.EncodeToString(fileBytes)
+	if err != nil {
+		// Handle the error
+		fmt.Println("Error:", err)
+		return
+	}
 
 	return base64String, nil
 }
@@ -156,7 +165,7 @@ func Show_minuman(c *gin.Context) {
 		// Adjust this to convert the appropriate field
 		base64String, err := ConvertFileToBase64("assets/photo/products/" + product.Photo)
 		if err != nil {
-			c.JSON(http.StatusOK, gin.H{"status": -1, "message": "error on base 64", "base64": base64Strings, "data": products})
+			c.JSON(http.StatusOK, gin.H{"status": -1, "error ": err, "message": "error on base 64", "base64": base64Strings, "data": products})
 
 		}
 		products[i].Photo = base64String
