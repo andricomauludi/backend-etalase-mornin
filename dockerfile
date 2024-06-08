@@ -10,10 +10,7 @@ COPY go.mod go.sum ./
 # Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
 RUN go mod download
 
-COPY . .
-
-# Copy the source from the current directory to the Working Directory inside the container
-COPY vendor/ ./vendor/
+# Copy the source files from the current directory to the Working Directory inside the container
 COPY . .
 
 # Copy the assets
@@ -27,10 +24,10 @@ FROM alpine:latest
 
 WORKDIR /app
 
-
-# Copy the Pre-built binary file from the previous stage
+# Copy the Pre-built binary file and assets from the previous stage
 COPY --from=builder /app/pos-backend .
-RUN ls -la /app
+COPY --from=builder /app/assets/ ./assets/
+COPY --from=builder /app/. .
 
 # Copy the .env file
 COPY .env .env
