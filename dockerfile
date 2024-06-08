@@ -27,7 +27,7 @@ COPY --from=builder /docker-gs-ping .
 
 # Copy the .env file
 COPY .env .env
-
+COPY config/ config/
 # Expose port 8080 to the outside world
 EXPOSE 8090
 
