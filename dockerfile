@@ -20,7 +20,7 @@ COPY . .
 COPY assets/ /app/assets/
 
 # Build the Go app
-RUN CGO_ENABLED=0 GOOS=linux go build -o /pos-backend
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/pos-backend
 
 # Stage 2: Run the Go app
 FROM alpine:latest
@@ -29,7 +29,7 @@ WORKDIR /app
 
 
 # Copy the Pre-built binary file from the previous stage
-COPY --from=builder /pos-backend .
+COPY --from=builder /app/pos-backend .
 RUN ls -la /app
 
 # Copy the .env file
