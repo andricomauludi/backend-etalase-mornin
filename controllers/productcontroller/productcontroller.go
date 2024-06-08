@@ -50,6 +50,7 @@ func ConvertFileToBase64(filePath string) (string, error) {
 	// Open the file
 	file, err := os.Open(filePath)
 	if err != nil {
+		fmt.Println(err)
 		return "", fmt.Errorf("failed to open file: %v", err)
 	}
 	defer file.Close()
