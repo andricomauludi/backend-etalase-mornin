@@ -29,7 +29,7 @@ WORKDIR /app
 
 
 # Copy the Pre-built binary file from the previous stage
-COPY --from=builder /app/pos-backend .
+COPY --from=builder /pos-backend .
 RUN ls -la /app
 
 # Copy the .env file
