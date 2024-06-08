@@ -2,7 +2,7 @@
 FROM golang:1.20-alpine AS builder
 
 # Set the Current Working Directory inside the container
-WORKDIR /app
+WORKDIR /app/
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./
@@ -13,7 +13,6 @@ RUN go mod download
 # Copy the source from the current directory to the Working Directory inside the container
 COPY vendor/ ./vendor/
 COPY . .
-
 
 # Copy the assets
 COPY assets/ /app/assets/
