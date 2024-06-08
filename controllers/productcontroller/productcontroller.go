@@ -46,6 +46,11 @@ func Index(c *gin.Context) {
 func ConvertFileToBase64(filePath string) (string, error) {
 	// Open the file
 	fmt.Println("Attempting to open file at path:", filePath)
+	cwd, err := os.Getwd()
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+	fmt.Println("Current working directory:", cwd)
 
 	// Open the file
 	file, err := os.Open(filePath)
