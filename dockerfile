@@ -10,6 +10,8 @@ COPY go.mod go.sum ./
 # Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
 RUN go mod download
 
+COPY * ./
+
 # Copy the source from the current directory to the Working Directory inside the container
 COPY vendor/ ./vendor/
 COPY . .
@@ -17,19 +19,11 @@ COPY . .
 # Copy the assets
 COPY assets/ /app/assets/
 
+# Copy the .env file
+COPY .env .env
 # Build the Go app
 RUN CGO_ENABLED=0 GOOS=linux go build -o /docker-gs-ping
 
-# Stage 2: Run the Go app
-FROM alpine:latest
-
-WORKDIR /root/
-
-# Copy the Pre-built binary file from the previous stage
-COPY --from=builder /docker-gs-ping .
-
-# Copy the .env file
-COPY .env .env
 
 # Expose port 8080 to the outside world
 EXPOSE 8090
