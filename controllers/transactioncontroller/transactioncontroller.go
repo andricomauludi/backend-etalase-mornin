@@ -62,45 +62,38 @@ func ConvertFileToBase64(filePath string) (string, error) {
 	return base64String, nil
 }
 func Show_transaction(c *gin.Context) {
-
-	var bill []models.Bill               //array dan ambil model product
-	var detail_bill []models.Detail_bill //array dan ambil model product
-
+	var bills []models.Bill // array to hold all bills
 	// UserResponse struct represents the custom JSON response
 	type BillResponse struct {
 		Bill        models.Bill
 		Detail_bill []models.Detail_bill
 	}
 
-	// if err := models.DB.Find(&bill, "jenis_menu = ?", "makanan").Error; err != nil {
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	// 	return
-	// }
-	if err := models.DB.Find(&bill).Error; err != nil {
+	// Fetch all bills from the database
+	if err := models.DB.Find(&bills).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Loop through the products and convert their desired fields to base64
+	// Loop through the bills and fetch their corresponding detail bills
 	var billResponses []BillResponse
-	for i, _ := range bill {
-		// Assuming you want to convert the product name to base64
-		// Adjust this to convert the appropriate field
-		if err := models.DB.Find(&detail_bill, "id_bill = ?", bill[i].Id).Error; err != nil {
+	for i := range bills {
+		var detailBills []models.Detail_bill // array to hold detail bills for each bill
+		if err := models.DB.Find(&detailBills, "id_bill = ?", bills[i].Id).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 		response := BillResponse{
-			Bill:        bill[i],
-			Detail_bill: detail_bill,
+			Bill:        bills[i],
+			Detail_bill: detailBills,
 		}
 		billResponses = append(billResponses, response)
-
 	}
 
-	// Return the JSON response with products and their base64 encoded fields
+	// Return the JSON response with bills and their associated detail bills
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": billResponses})
 }
+
 func Show_saved_bill(c *gin.Context) {
 
 	var bill []models.Bill               //array dan ambil model product
@@ -452,17 +445,19 @@ func Delete_bill_old(c *gin.Context) {
 func Delete_detail_bill(c *gin.Context) {
 	var detail_bill models.Detail_bill
 
-	var input struct {
-		Id json.Number
-	}
-	// id, _ := strconv.ParseInt(input["id"], 10, 64) //melakukan perubahan string to integer, dengan ukuran integer 10 dan size integer 64
-
-	if err := c.ShouldBindJSON(&input); err != nil { //create menggunakan input json sehinggap pengecekan juga menggunakan json
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": err.Error()})
+	err := c.Request.ParseMultipartForm(10 << 20) // 10MB max size
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": -1, "error": "Failed to parse multipart form"})
 		return
 	}
 
-	id, _ := input.Id.Int64()
+	IdPostStr := c.PostForm("id")
+
+	id, err := strconv.ParseInt(IdPostStr, 10, 64)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": "Invalid detail bill ID"})
+		return
+	}
 
 	if models.DB.Delete(&detail_bill, id).RowsAffected == 0 {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": "Detail bill is not found"})

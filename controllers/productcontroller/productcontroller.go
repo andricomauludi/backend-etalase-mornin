@@ -45,14 +45,6 @@ func Index(c *gin.Context) {
 }
 func ConvertFileToBase64(filePath string) (string, error) {
 	// Open the file
-	fmt.Println("Attempting to open file at path:", filePath)
-	cwd, err := os.Getwd()
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
-	fmt.Println("Current working directory:", cwd)
-
-	// Open the file
 	file, err := os.Open(filePath)
 	if err != nil {
 		fmt.Println(err)
@@ -69,7 +61,6 @@ func ConvertFileToBase64(filePath string) (string, error) {
 	// Convert file content to base64
 	base64String := base64.StdEncoding.EncodeToString(fileBytes)
 	// Print the base64 string
-	fmt.Println("Base64 string:", base64String)
 
 	return base64String, nil
 }

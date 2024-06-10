@@ -63,7 +63,7 @@ func main() {
 	transaction.PUT("/edit_detail_bill/:id", transactioncontroller.Update_detail_bill)
 	transaction.PUT("/edit_klien/:id", transactioncontroller.Update_klien)
 	transaction.POST("/delete_bill", transactioncontroller.Delete_bill)
-	transaction.DELETE("/delete_detail_bill", transactioncontroller.Delete_detail_bill)
+	transaction.POST("/delete_detail_bill", transactioncontroller.Delete_detail_bill)
 	transaction.DELETE("/delete_klien", transactioncontroller.Delete_klien)
 
 	r.POST("api/auth/signup", authcontroller.Signup)
