@@ -55,8 +55,10 @@ func main() {
 	transaction.POST("/create_bill", transactioncontroller.CreateOrUpdateBill)
 	transaction.POST("/create_detail_bill", transactioncontroller.Create_detail_bill)
 	transaction.POST("/create_detail_bill_json", transactioncontroller.Create_detail_bill2)
+	transaction.POST("/create_pengeluaran", transactioncontroller.Create_pengeluaran)
 	transaction.POST("/create_klien", transactioncontroller.Create_klien)
 	transaction.GET("/show_transaction", transactioncontroller.Show_transaction)
+	transaction.GET("/show_pengeluaran", transactioncontroller.Show_pengeluaran)
 	transaction.GET("/show_detail_bill/:id", transactioncontroller.Show_detail_bill)
 	transaction.GET("/show_saved_bill", transactioncontroller.Show_saved_bill)
 	transaction.PUT("/edit_bill/:id", transactioncontroller.Update_bill)
@@ -65,6 +67,7 @@ func main() {
 	transaction.POST("/delete_bill", transactioncontroller.Delete_bill)
 	transaction.POST("/delete_detail_bill", transactioncontroller.Delete_detail_bill)
 	transaction.DELETE("/delete_klien", transactioncontroller.Delete_klien)
+	transaction.DELETE("/delete_pengeluaran", transactioncontroller.Delete_pengeluaran)
 
 	r.POST("api/auth/signup", authcontroller.Signup)
 	r.POST("api/auth/login", authcontroller.Login)

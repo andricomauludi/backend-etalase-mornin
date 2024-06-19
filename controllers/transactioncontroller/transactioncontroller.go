@@ -93,6 +93,21 @@ func Show_transaction(c *gin.Context) {
 	// Return the JSON response with bills and their associated detail bills
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": billResponses})
 }
+func Show_pengeluaran(c *gin.Context) {
+
+	var pengeluarans []models.Pengeluaran
+
+	// Retrieve the products from the database
+	if err := models.DB.Find(&pengeluarans).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Loop through the products and convert their desired fields to base64
+
+	// Return the JSON response with products and their base64 encoded fields
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": pengeluarans})
+}
 
 func Show_saved_bill(c *gin.Context) {
 
@@ -330,6 +345,57 @@ func Create_detail_bill(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": detail_bill, "message": "Your detail bill is successfully created!"})
 }
 
+func Create_pengeluaran(c *gin.Context) {
+
+	// Parse multipart form data
+	err := c.Request.ParseMultipartForm(10 << 20) // 10MB max size
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": -1, "error": "Failed to parse multipart form"})
+		return
+	}
+
+	NamaPengeluaranPost := c.PostForm("nama_pengeluaran")
+	JenisPengeluaranPost := c.PostForm("jenis_pengeluaran")
+	HargaPengeluaranPostStr := c.PostForm("harga_pengeluaran")
+	JumlahBarangPostStr := c.PostForm("jumlah_barang")
+	SatuanPost := c.PostForm("satuan")
+	TotalPengeluaranPostStr := c.PostForm("total_pengeluaran")
+
+	HargaPengeluaranPost, err := strconv.ParseInt(HargaPengeluaranPostStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Harga Pengeluaran value"})
+		return
+	}
+	JumlahBarangPost, err := strconv.ParseInt(JumlahBarangPostStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Jumlah Barang value"})
+		return
+	}
+	TotalPengeluaranPost, err := strconv.ParseInt(TotalPengeluaranPostStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Total Pengeluaran value"})
+		return
+	}
+
+	// Save file details to the database
+	pengeluaran := models.Pengeluaran{
+		NamaPengeluaran:  NamaPengeluaranPost,
+		JenisPengeluaran: JenisPengeluaranPost,
+		HargaPengeluaran: HargaPengeluaranPost,
+		JumlahBarang:     JumlahBarangPost,
+		Satuan:           SatuanPost,
+		TotalPengeluaran: TotalPengeluaranPost,
+	}
+	// Assuming models.DB is your database connection
+	if err := models.DB.Create(&pengeluaran).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": -1, "error": "Failed to save data to database"})
+		return
+	}
+
+	// Respond with a success message
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": pengeluaran, "message": "Your pengeluaran is successfully created!"})
+}
+
 func Create_detail_bill2(c *gin.Context) {
 	var detail_bill []models.Detail_bill
 
@@ -538,6 +604,27 @@ func Delete_klien(c *gin.Context) {
 
 	if models.DB.Delete(&klien, id).RowsAffected == 0 {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": "Klien is not found"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": "Data deleted successfully"})
+}
+func Delete_pengeluaran(c *gin.Context) {
+	var pengeluarans models.Pengeluaran
+
+	var input struct {
+		Id json.Number
+	}
+	// id, _ := strconv.ParseInt(input["id"], 10, 64) //melakukan perubahan string to integer, dengan ukuran integer 10 dan size integer 64
+
+	if err := c.ShouldBindJSON(&input); err != nil { //create menggunakan input json sehinggap pengecekan juga menggunakan json
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": err.Error()})
+		return
+	}
+
+	id, _ := input.Id.Int64()
+
+	if models.DB.Delete(&pengeluarans, id).RowsAffected == 0 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": "Pengeluaran is not found"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": "Data deleted successfully"})
