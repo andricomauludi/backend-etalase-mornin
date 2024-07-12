@@ -1,8 +1,10 @@
 package authcontroller
 
 import (
+	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/andricomauludi/backend-etalase-mornin/models"
@@ -145,7 +147,7 @@ func Login(c *gin.Context) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub":  user.ID,
 		"role": user.Role,
-		"exp":  time.Now().Add(time.Hour * 24 * 30).Unix(),
+		"exp":  time.Now().Add(time.Hour * 24 * 1).Unix(),
 	})
 
 	// Sign and get the complete encoded token as a string using the secret
@@ -167,7 +169,7 @@ func Login(c *gin.Context) {
 	//sent it back
 
 	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("Authorization", tokenString, 3600*24*30, "", "", false, true) //menyimpan cookie authorization jwt
+	// c.SetCookie("Authorization", tokenString, 3600*24*30, "", "", false, true) //menyimpan cookie authorization jwt
 	messagelogin := make(map[string]interface{})
 
 	// Insert the inner JSON object into the outer JSON object
@@ -181,10 +183,14 @@ func Login(c *gin.Context) {
 }
 
 func Logout(c *gin.Context) {
-	// Set the cookie with MaxAge -1 to delete it
-	c.SetCookie("Authorization", "", -1, "", "", false, true)
-	c.JSON(http.StatusOK, gin.H{"status": 1, "data": "You are Logged Out!"})
+	// Clear the Authorization cookie
+	// c.SetCookie("Authorization", "", -1, "/", "", false, true)
 
+	// Respond with success message
+	c.JSON(http.StatusOK, gin.H{
+		"status": 1,
+		"data":   "Logged out successfully",
+	})
 }
 
 func Validate(c *gin.Context) {
@@ -207,4 +213,59 @@ func Showall(c *gin.Context) {
 
 	// Insert the inner JSON object into the oute
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": user}) //untuk return json nya
+}
+
+func CheckAuthHandler(c *gin.Context) {
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [no header]"})
+		return
+	}
+
+	// Log the Authorization header to check if it's received
+	fmt.Println("Received Authorization header:", authHeader)
+
+	// Split the "Bearer" prefix
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [token format]"})
+		return
+	}
+
+	tokenString := parts[1]
+
+	// Parse and validate the token
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(os.Getenv("SECRET")), nil
+	})
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [token invalid]"})
+		return
+	}
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		if float64(time.Now().Unix()) > claims["exp"].(float64) {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [expired]"})
+
+			return
+		}
+
+		var user models.User
+		models.DB.First(&user, claims["sub"])
+
+		if user.ID == 0 {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [no user]"})
+
+			return
+		}
+
+		c.AbortWithStatusJSON(http.StatusOK, gin.H{"status": 1, "data": "You Logged in"})
+
+	} else {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [token no valid]"})
+
+	}
 }

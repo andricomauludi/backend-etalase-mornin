@@ -14,50 +14,64 @@ import (
 )
 
 func RequireAuth(c *gin.Context) {
-	//get the cookie off request
-	tokenString, err := c.Cookie("Authorization")
-	if err != nil {
+	// Get the Authorization header from the request
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [main]"})
+		return
 	}
-	//decode / validate it
 
-	// Parse takes the token string and a function for looking up the key.
+	// Log the Authorization header to check if it's received
+	fmt.Println("Received Authorization header:", authHeader)
+
+	// Split the "Bearer" prefix
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [token format]"})
+		return
+	}
+
+	tokenString := parts[1]
+
+	// Parse and validate the token
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
-
-		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
 		return []byte(os.Getenv("SECRET")), nil
 	})
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [token invalid]"})
+		return
+	}
 
-		//check the exp
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		// Check the token expiration
 		if float64(time.Now().Unix()) > claims["exp"].(float64) {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [Exp]"})
+			return
 		}
 
-		//find the user with token sub
+		// Find the user with the token subject
 		var user models.User
 		models.DB.First(&user, claims["sub"])
 
 		if user.ID == 0 {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [Id not found]"})
+			return
 		}
 
-		//attach to req
+		// Attach the user to the context
 		c.Set("user", user)
 
-		//continue
-
+		// Continue with the request
 		c.Next()
-
 	} else {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [token not valid]"})
 	}
-
 }
+
 func Authorization(validRoles []int) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		//get the cookie off request
@@ -132,7 +146,7 @@ func stringToIntSlice(str string) []int {
 }
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")

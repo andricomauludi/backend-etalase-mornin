@@ -93,6 +93,58 @@ func Show_transaction(c *gin.Context) {
 	// Return the JSON response with bills and their associated detail bills
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": billResponses})
 }
+func Detail_transaction(c *gin.Context) {
+	id := c.Param("id")
+	var bills []models.Bill // array to hold all bills
+	// UserResponse struct represents the custom JSON response
+	type BillResponse struct {
+		Bill        models.Bill
+		Detail_bill []models.Detail_bill
+	}
+
+	// Fetch all bills from the database
+	if err := models.DB.Find(&bills, id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Loop through the bills and fetch their corresponding detail bills
+	var billResponses []BillResponse
+	for i := range bills {
+		var detailBills []models.Detail_bill // array to hold detail bills for each bill
+		if err := models.DB.Find(&detailBills, "id_bill = ?", bills[i].Id).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		response := BillResponse{
+			Bill:        bills[i],
+			Detail_bill: detailBills,
+		}
+		billResponses = append(billResponses, response)
+	}
+
+	// Return the JSON response with bills and their associated detail bills
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": billResponses})
+}
+func Show_bill(c *gin.Context) {
+	id := c.Param("id")
+	var bills []models.Bill // array to hold all bills
+	// UserResponse struct represents the custom JSON response
+
+	if err := models.DB.Find(&bills, id).Error; err != nil { //mencari 1 data yg memiliki id yg sama dengan yg dicari, apabila tidak dapat maka masuk ke if ini(error)
+		switch err {
+		case gorm.ErrRecordNotFound: //apabila tidak terdapat error record
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"status": 0, "data": "ERROR data not found"})
+			return
+		default: //apabilla terdapat error record, mengembalikan data dengan error record
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"status": -1, "data": err.Error})
+			return
+		}
+	}
+
+	// Return the JSON response with bills and their associated bills
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": bills})
+}
 func Show_pengeluaran(c *gin.Context) {
 
 	var pengeluarans []models.Pengeluaran
@@ -360,6 +412,7 @@ func Create_pengeluaran(c *gin.Context) {
 	JumlahBarangPostStr := c.PostForm("jumlah_barang")
 	SatuanPost := c.PostForm("satuan")
 	TotalPengeluaranPostStr := c.PostForm("total_pengeluaran")
+	WaktuPengeluaranPost := time.Now()
 
 	HargaPengeluaranPost, err := strconv.ParseInt(HargaPengeluaranPostStr, 10, 64)
 	if err != nil {
@@ -385,6 +438,7 @@ func Create_pengeluaran(c *gin.Context) {
 		JumlahBarang:     JumlahBarangPost,
 		Satuan:           SatuanPost,
 		TotalPengeluaran: TotalPengeluaranPost,
+		WaktuPengeluaran: WaktuPengeluaranPost,
 	}
 	// Assuming models.DB is your database connection
 	if err := models.DB.Create(&pengeluaran).Error; err != nil {
@@ -467,6 +521,21 @@ func Update_bill(c *gin.Context) {
 	}
 
 	if models.DB.Model(&bill).Where("id = ?", id).Updates(&bill).RowsAffected == 0 { //mengecek apakah id yg diinput ada di database atau tidak
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": "Data is not found"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": "Data updated"}) //mengembalikan status yg benar
+}
+func Update_pengeluaran(c *gin.Context) {
+	var pengeluaran models.Pengeluaran
+	id := c.Param("id") //mengambil params dari url yg disediakan main.go
+
+	if err := c.ShouldBindJSON(&pengeluaran); err != nil { //create menggunakan input json sehinggap pengecekan juga menggunakan json
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": err.Error()})
+		return
+	}
+
+	if models.DB.Model(&pengeluaran).Where("id = ?", id).Updates(&pengeluaran).RowsAffected == 0 { //mengecek apakah id yg diinput ada di database atau tidak
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": "Data is not found"})
 		return
 	}
@@ -609,19 +678,22 @@ func Delete_klien(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": "Data deleted successfully"})
 }
 func Delete_pengeluaran(c *gin.Context) {
+
 	var pengeluarans models.Pengeluaran
 
-	var input struct {
-		Id json.Number
-	}
-	// id, _ := strconv.ParseInt(input["id"], 10, 64) //melakukan perubahan string to integer, dengan ukuran integer 10 dan size integer 64
-
-	if err := c.ShouldBindJSON(&input); err != nil { //create menggunakan input json sehinggap pengecekan juga menggunakan json
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": err.Error()})
+	err := c.Request.ParseMultipartForm(10 << 20) // 10MB max size
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": -1, "error": "Failed to parse multipart form"})
 		return
 	}
 
-	id, _ := input.Id.Int64()
+	IdPostStr := c.PostForm("id")
+
+	id, err := strconv.ParseInt(IdPostStr, 10, 64)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": "Invalid pengeluaran ID"})
+		return
+	}
 
 	if models.DB.Delete(&pengeluarans, id).RowsAffected == 0 {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": "Pengeluaran is not found"})

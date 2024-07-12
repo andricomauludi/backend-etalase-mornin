@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/andricomauludi/backend-etalase-mornin/controllers/authcontroller"
+	"github.com/andricomauludi/backend-etalase-mornin/controllers/pendapatancontroller"
 	"github.com/andricomauludi/backend-etalase-mornin/controllers/productcontroller"
 	"github.com/andricomauludi/backend-etalase-mornin/controllers/transactioncontroller"
 	"github.com/andricomauludi/backend-etalase-mornin/initializers"
@@ -34,6 +35,7 @@ func main() {
 
 	product := api.Group("/product")
 	transaction := api.Group("/transaction")
+	pendapatan := api.Group("/pendapatan")
 	auth := api.Group("/auth")
 
 	// product.Use(middleware.Authorization([]int{1, 2, 4}))
@@ -58,22 +60,35 @@ func main() {
 	transaction.POST("/create_pengeluaran", transactioncontroller.Create_pengeluaran)
 	transaction.POST("/create_klien", transactioncontroller.Create_klien)
 	transaction.GET("/show_transaction", transactioncontroller.Show_transaction)
+	transaction.GET("/detail_transaction/:id", transactioncontroller.Detail_transaction)
+	transaction.GET("/show_bill/:id", transactioncontroller.Show_bill)
 	transaction.GET("/show_pengeluaran", transactioncontroller.Show_pengeluaran)
 	transaction.GET("/show_detail_bill/:id", transactioncontroller.Show_detail_bill)
 	transaction.GET("/show_saved_bill", transactioncontroller.Show_saved_bill)
 	transaction.PUT("/edit_bill/:id", transactioncontroller.Update_bill)
+	transaction.PUT("/edit_pengeluaran/:id", transactioncontroller.Update_pengeluaran)
 	transaction.PUT("/edit_detail_bill/:id", transactioncontroller.Update_detail_bill)
 	transaction.PUT("/edit_klien/:id", transactioncontroller.Update_klien)
 	transaction.POST("/delete_bill", transactioncontroller.Delete_bill)
 	transaction.POST("/delete_detail_bill", transactioncontroller.Delete_detail_bill)
 	transaction.DELETE("/delete_klien", transactioncontroller.Delete_klien)
-	transaction.DELETE("/delete_pengeluaran", transactioncontroller.Delete_pengeluaran)
+	transaction.POST("/delete_pengeluaran", transactioncontroller.Delete_pengeluaran)
 
 	r.POST("api/auth/signup", authcontroller.Signup)
 	r.POST("api/auth/login", authcontroller.Login)
+	r.POST("api/auth/check-auth", authcontroller.CheckAuthHandler)
+
 	auth.POST("/logout", middleware.RequireAuth, authcontroller.Logout)
 	auth.GET("/validate", authcontroller.Validate)
 	auth.GET("/showall", middleware.RequireAuth, authcontroller.Showall)
+
+	pendapatan.GET("/show_pendapatan_bulanan", pendapatancontroller.TotalCurrentMonth)
+	pendapatan.GET("/show_pendapatan_harian", pendapatancontroller.TotalToday)
+	pendapatan.GET("/show_pengeluaran_bulanan", pendapatancontroller.TotalPengeluaranCurrentMonth)
+	pendapatan.GET("/show_pengeluaran_harian", pendapatancontroller.TotalPengeluaranToday)
+	pendapatan.GET("/show_keuntungan_bulanan", pendapatancontroller.TotalKeuntunganBersihCurrentMonth)
+	pendapatan.GET("/show_keuntungan_harian", pendapatancontroller.TotalKeuntunganBersihCurrentDay)
+
 	// r := gin.Default()
 	// r.POST("/login", handler.LoginHandler)
 
