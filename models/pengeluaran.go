@@ -11,4 +11,5 @@ type Pengeluaran struct { //CATATAN PENTING, variable row harus dimulai dengan H
 	JumlahBarang     int64  `gorm:"type:integer(10)" json:"jumlah_barang"`
 	Satuan           string `gorm:"type:varchar(50)" json:"satuan"`
 	TotalPengeluaran int64  `gorm:"type:integer(10)" json:"total_pengeluaran"`
+	Tipe             string `gorm:"type:varchar(1)" json:"tipe"`
 }

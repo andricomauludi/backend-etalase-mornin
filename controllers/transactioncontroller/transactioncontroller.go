@@ -70,7 +70,39 @@ func Show_transaction(c *gin.Context) {
 	}
 
 	// Fetch all bills from the database
-	if err := models.DB.Find(&bills).Error; err != nil {
+	if err := models.DB.Where("tipe = ?", 0).Find(&bills).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Loop through the bills and fetch their corresponding detail bills
+	var billResponses []BillResponse
+	for i := range bills {
+		var detailBills []models.Detail_bill // array to hold detail bills for each bill
+		if err := models.DB.Find(&detailBills, "id_bill = ?", bills[i].Id).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		response := BillResponse{
+			Bill:        bills[i],
+			Detail_bill: detailBills,
+		}
+		billResponses = append(billResponses, response)
+	}
+
+	// Return the JSON response with bills and their associated detail bills
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": billResponses})
+}
+func Show_transaction_cvj(c *gin.Context) {
+	var bills []models.Bill // array to hold all bills
+	// UserResponse struct represents the custom JSON response
+	type BillResponse struct {
+		Bill        models.Bill
+		Detail_bill []models.Detail_bill
+	}
+
+	// Fetch all bills from the database
+	if err := models.DB.Where("tipe = ?", 1).Find(&bills).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -150,7 +182,22 @@ func Show_pengeluaran(c *gin.Context) {
 	var pengeluarans []models.Pengeluaran
 
 	// Retrieve the products from the database
-	if err := models.DB.Find(&pengeluarans).Error; err != nil {
+	if err := models.DB.Where("tipe = ?", 0).Find(&pengeluarans).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Loop through the products and convert their desired fields to base64
+
+	// Return the JSON response with products and their base64 encoded fields
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": pengeluarans})
+}
+func Show_pengeluaran_cvj(c *gin.Context) {
+
+	var pengeluarans []models.Pengeluaran
+
+	// Retrieve the products from the database
+	if err := models.DB.Where("tipe = ?", 1).Find(&pengeluarans).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -244,6 +291,7 @@ func CreateOrUpdateBill(c *gin.Context) {
 
 	IdStr := c.PostForm("id")
 	PaidPost := c.PostForm("paid")
+	TipePost := c.PostForm("tipe")
 	NamaBillPost := c.PostForm("nama_bill")
 	TimestampPost := time.Now()
 	JenisPembayaranPost := c.PostForm("jenis_pembayaran")
@@ -297,6 +345,7 @@ func CreateOrUpdateBill(c *gin.Context) {
 		bill.NamaKlien = NamaKlienPost
 		bill.NamaBill = NamaBillPost
 		bill.Paid = PaidPost
+		bill.Tipe = TipePost
 		bill.Timestamp = TimestampPost
 		bill.JenisPembayaran = JenisPembayaranPost
 		bill.Total = TotalPost
@@ -319,6 +368,7 @@ func CreateOrUpdateBill(c *gin.Context) {
 			NamaKlien:       NamaKlienPost,
 			NamaBill:        NamaBillPost,
 			Paid:            PaidPost,
+			Tipe:            TipePost,
 			Timestamp:       TimestampPost,
 			JenisPembayaran: JenisPembayaranPost,
 			Total:           TotalPost,
@@ -411,6 +461,7 @@ func Create_pengeluaran(c *gin.Context) {
 	HargaPengeluaranPostStr := c.PostForm("harga_pengeluaran")
 	JumlahBarangPostStr := c.PostForm("jumlah_barang")
 	SatuanPost := c.PostForm("satuan")
+	TipePost := c.PostForm("tipe")
 	TotalPengeluaranPostStr := c.PostForm("total_pengeluaran")
 	WaktuPengeluaranPost := time.Now()
 
@@ -437,6 +488,7 @@ func Create_pengeluaran(c *gin.Context) {
 		HargaPengeluaran: HargaPengeluaranPost,
 		JumlahBarang:     JumlahBarangPost,
 		Satuan:           SatuanPost,
+		Tipe:             TipePost,
 		TotalPengeluaran: TotalPengeluaranPost,
 		WaktuPengeluaran: WaktuPengeluaranPost,
 	}

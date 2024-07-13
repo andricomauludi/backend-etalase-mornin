@@ -19,4 +19,6 @@ type Bill struct { //CATATAN PENTING, variable row harus dimulai dengan HURUF KA
 	CashOut         int64  `gorm:"type:integer(10)" json:"cash_out"`
 	IdKlien         int64  `gorm:"type:integer(13)" json:"id_klien"`
 	NamaKlien       string `gorm:"type:varchar(20)" json:"nama_klien"`
+	Tipe            string `gorm:"type:varchar(1)" json:"tipe"`
+	//tipe 0 untuk ceu monny, tipe 1 untuk cvj
 }
