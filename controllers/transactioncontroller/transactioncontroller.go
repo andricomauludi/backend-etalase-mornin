@@ -503,18 +503,34 @@ func Create_pengeluaran(c *gin.Context) {
 }
 
 func Create_detail_bill2(c *gin.Context) {
-	var detail_bill []models.Detail_bill
+	var detail_bills []models.Detail_bill
 
-	if err := c.ShouldBindJSON(&detail_bill); err != nil { //create menggunakan input json sehinggap pengecekan juga menggunakan json
+	if err := c.ShouldBindJSON(&detail_bills); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"status": 0, "data": err.Error()})
 		return
 	}
 
-	if err := models.DB.Create(&detail_bill).Error; err != nil {
+	// Extract unique id_bill values from the incoming data
+	idBills := make(map[int64]struct{})
+	for _, detail_bill := range detail_bills {
+		idBills[detail_bill.IdBill] = struct{}{}
+	}
+
+	// Delete existing detail_bill records with the same id_bill values
+	for idBill := range idBills {
+		if err := models.DB.Where("id_bill = ?", idBill).Delete(&models.Detail_bill{}).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"status": -1, "error": "Failed to delete existing detail_bill records"})
+			return
+		}
+	}
+
+	// Save new detail_bill records to the database
+	if err := models.DB.Create(&detail_bills).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"status": -1, "error": "Failed to save data to database"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": 1, "data": detail_bill, "message": "Your detail bill is successfully created!"})
+
+	c.JSON(http.StatusOK, gin.H{"status": 1, "data": detail_bills, "message": "Your detail bills are successfully created!"})
 }
 
 func Create_klien(c *gin.Context) {

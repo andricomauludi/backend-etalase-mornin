@@ -11,10 +11,10 @@ import (
 var DB *gorm.DB //menggunakan gorm db dalam koneksi db
 
 func ConnectDatabase() {
-	// dsn := os.Getenv("DATABASE_PORT")
-	dsn := os.Getenv("DATABASE_USER") + ":" + os.Getenv("DATABASE_PASSWORD") +
-		"@tcp(" + os.Getenv("DATABASE_HOST") + ")/" +
-		os.Getenv("DATABASE_NAME") + "?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := os.Getenv("DATABASE_PORT")
+	// dsn := os.Getenv("DATABASE_USER") + ":" + os.Getenv("DATABASE_PASSWORD") +
+	// 	"@tcp(" + os.Getenv("DATABASE_HOST") + ")/" +
+	// 	os.Getenv("DATABASE_NAME") + "?charset=utf8mb4&parseTime=True&loc=Local"
 
 	database, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
