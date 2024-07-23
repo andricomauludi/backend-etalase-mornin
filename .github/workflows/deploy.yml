@@ -47,7 +47,7 @@ jobs:
           # Deploy Docker container to VM
           ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USERNAME@$SSH_HOST << 'EOF'
             sudo docker pull ${{ secrets.DOCKER_IMAGE }}
-            sudo docker stop pos-backend || true
-            sudo docker rm pos-backend || true
-            sudo docker run -d --name pos-backend -p 8090:8090 ${{ secrets.DOCKER_IMAGE }}
+            sudo docker stop pos-backend-container || true
+            sudo docker rm pos-backend-container || true
+            sudo docker run -d --name pos-backend-container -p 8090:8090 ${{ secrets.DOCKER_IMAGE }}
           EOF
