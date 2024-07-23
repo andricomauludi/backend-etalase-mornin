@@ -1,0 +1,53 @@
+name: Deploy Gin Golang Application
+
+on:
+  push:
+    branches:
+      - main  # Replace with the branch you want to trigger deployment
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKER_IMAGE }} .
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push Docker image to Docker Hub
+        run: |
+          docker push ${{ secrets.DOCKER_IMAGE }}
+
+      - name: Deploy to VM
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          # Install SSH Client
+          sudo apt-get update
+          sudo apt-get install -y sshpass
+
+          # Write the SSH private key to a file
+          echo "$SSH_PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+
+          # Deploy Docker container to VM
+          ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USERNAME@$SSH_HOST << 'EOF'
+            sudo docker pull ${{ secrets.DOCKER_IMAGE }}
+            sudo docker stop pos-backend || true
+            sudo docker rm pos-backend || true
+            sudo docker run -d --name pos-backend -p 8090:8090 ${{ secrets.DOCKER_IMAGE }}
+          EOF
