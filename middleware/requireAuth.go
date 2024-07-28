@@ -146,7 +146,24 @@ func stringToIntSlice(str string) []int {
 }
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://www.ceumonny.com:3000")
+		// Define allowed origins
+		allowedOrigins := map[string]bool{
+			"http://www.ceumonny.com:3000": true,
+			"http://ceumonny.com:3000":     true,
+			// Add other allowed origins here if needed
+		}
+
+		origin := c.Request.Header.Get("Origin")
+
+		// Check if the origin is allowed and set the Access-Control-Allow-Origin header accordingly
+		if allowedOrigins[origin] {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+		} else {
+			// Optionally handle disallowed origins
+			// For example, you could set a default allowed origin or simply omit the header
+			// c.Writer.Header().Set("Access-Control-Allow-Origin", "http://www.ceumonny.com:3000")
+		}
+
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
