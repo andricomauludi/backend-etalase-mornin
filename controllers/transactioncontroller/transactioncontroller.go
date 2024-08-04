@@ -346,7 +346,7 @@ func CreateOrUpdateBill(c *gin.Context) {
 		bill.NamaBill = NamaBillPost
 		bill.Paid = PaidPost
 		bill.Tipe = TipePost
-		bill.Timestamp = TimestampPost
+		// bill.Timestamp = TimestampPost
 		bill.JenisPembayaran = JenisPembayaranPost
 		bill.Total = TotalPost
 		bill.CashIn = CashInPost
