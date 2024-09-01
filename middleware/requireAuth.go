@@ -148,6 +148,7 @@ func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Define allowed origins
 		allowedOrigins := map[string]bool{
+			"http://localhost:3000":        true,
 			"http://www.ceumonny.com:3000": true,
 			"http://ceumonny.com:3000":     true,
 			// Add other allowed origins here if needed
@@ -176,48 +177,3 @@ func CORSMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
-
-// func parseStringToIntSlice(str string) []int {
-// 	values := make([]int, 0)
-
-// 	// Split string by comma
-// 	strValues := strings.Split(str, ",")
-
-// 	// Convert each string value to int
-// 	for _, s := range strValues {
-// 		num, err := strconv.Atoi(strings.TrimSpace(s))
-// 		if err != nil {
-// 			return nil
-// 		}
-// 		values = append(values, num)
-// 	}
-
-// 	return values
-// }
-
-// func Authorization2(validRoles []int) gin.HandlerFunc {
-// 	return func(context *gin.Context) {
-
-// 		if len(context.Keys) == 0 {
-// 			ReturnUnauthorized(context)
-// 		}
-
-// 		rolesVal := context.Keys["Roles"]
-// 		fmt.Println("roles", rolesVal)
-// 		if rolesVal == nil {
-// 			ReturnUnauthorized(context)
-// 		}
-
-// 		roles := rolesVal.([]int)
-// 		validation := make(map[int]int)
-// 		for _, val := range roles {
-// 			validation[val] = 0
-// 		}
-
-// 		for _, val := range validRoles {
-// 			if _, ok := validation[val]; !ok {
-// 				ReturnUnauthorized(context)
-// 			}
-// 		}
-// 	}
-// }

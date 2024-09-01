@@ -59,6 +59,7 @@ func main() {
 	transaction.POST("/create_detail_bill_json", transactioncontroller.Create_detail_bill2)
 	transaction.POST("/create_pengeluaran", transactioncontroller.Create_pengeluaran)
 	transaction.POST("/create_klien", transactioncontroller.Create_klien)
+	transaction.POST("/excel_export", transactioncontroller.Excel_export)
 	transaction.GET("/show_transaction", transactioncontroller.Show_transaction)
 	transaction.GET("/show_transaction_cvj", transactioncontroller.Show_transaction_cvj)
 	transaction.GET("/detail_transaction/:id", transactioncontroller.Detail_transaction)

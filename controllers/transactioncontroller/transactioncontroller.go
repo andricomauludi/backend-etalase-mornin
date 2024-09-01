@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/xuri/excelize/v2"
+
 	"github.com/andricomauludi/backend-etalase-mornin/models"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -61,6 +63,152 @@ func ConvertFileToBase64(filePath string) (string, error) {
 
 	return base64String, nil
 }
+func Excel_export(c *gin.Context) {
+	var bills []models.Bill
+	type BillResponse struct {
+		Bill        models.Bill
+		Detail_bill []models.Detail_bill
+	}
+
+	// Read form data
+	day := c.PostForm("day")
+	month := c.PostForm("month")
+	year := c.PostForm("year")
+
+	// Build the query based on the parameters
+	query := models.DB.Where("tipe = ?", 0)
+	if day != "" {
+		query = query.Where("DAY(timestamp) = ?", day)
+	}
+	if month != "" {
+		query = query.Where("MONTH(timestamp) = ?", month)
+	}
+	if year != "" {
+		query = query.Where("YEAR(timestamp) = ?", year)
+	}
+
+	// Execute the query
+	if err := query.Find(&bills).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	var billResponses []BillResponse
+
+	for i := range bills {
+		var detailBills []models.Detail_bill
+		if err := models.DB.Find(&detailBills, "id_bill = ?", bills[i].Id).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		response := BillResponse{
+			Bill:        bills[i],
+			Detail_bill: detailBills,
+		}
+		billResponses = append(billResponses, response)
+	}
+
+	// Create a new Excel file
+	f := excelize.NewFile()
+	// Create a new sheet and handle the returned index and error
+	index, err := f.NewSheet("Sheet1")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Set the active sheet of the workbook
+	f.SetActiveSheet(index)
+	// Add title, date filter details above the table
+	f.SetCellValue("Sheet1", "A1", "Rekap Ceu Monny")
+	f.MergeCell("Sheet1", "A1", "N1") // Merge cells for the title
+	// Add date filter details above the table
+	dateFilter := "Tanggal : "
+	if day != "" {
+		dateFilter += "Hari " + day + " "
+	}
+	if month != "" {
+		dateFilter += "Bulan " + month + " "
+	}
+	if year != "" {
+		dateFilter += "Tahun " + year
+	}
+	f.SetCellValue("Sheet1", "A2", dateFilter)
+
+	// Header for the Bill data
+	f.SetCellValue("Sheet1", "A3", "Bill ID")
+	f.SetCellValue("Sheet1", "B3", "Sudah Bayar")
+	f.SetCellValue("Sheet1", "C3", "Tanggal dan Waktu")
+	f.SetCellValue("Sheet1", "D3", "Jenis Pembayaran")
+	f.SetCellValue("Sheet1", "E3", "Total")
+	f.SetCellValue("Sheet1", "F3", "Uang Masuk")
+	f.SetCellValue("Sheet1", "G3", "Uang Keluar/Kembali")
+
+	// Header for the Detail Bill data
+	f.SetCellValue("Sheet1", "H3", "Detail Bill ID")
+	f.SetCellValue("Sheet1", "I3", "Id Bill")
+	f.SetCellValue("Sheet1", "J3", "Id Menu")
+	f.SetCellValue("Sheet1", "K3", "Nama Menu")
+	f.SetCellValue("Sheet1", "L3", "Harga")
+	f.SetCellValue("Sheet1", "M3", "Jumlah")
+	f.SetCellValue("Sheet1", "N3", "Total Harga")
+
+	// Initialize totalSum as float64
+	var totalSum float64
+
+	// Fill in the bill data
+	row := 4
+	for _, br := range billResponses {
+		// Determine the status of "Paid"
+		var paidStatus string
+		if br.Bill.Paid == "1" {
+			paidStatus = "sudah"
+		} else {
+			paidStatus = "belum"
+		}
+		f.SetCellValue("Sheet1", "A"+strconv.Itoa(row), br.Bill.Id)
+		f.SetCellValue("Sheet1", "B"+strconv.Itoa(row), paidStatus)
+		// Convert timestamp to Indonesian date and time format
+		dateTime := br.Bill.Timestamp.Format("02 January 2006 15:04:05")
+		f.SetCellValue("Sheet1", "C"+strconv.Itoa(row), dateTime)
+		f.SetCellValue("Sheet1", "D"+strconv.Itoa(row), br.Bill.JenisPembayaran)
+		f.SetCellValue("Sheet1", "E"+strconv.Itoa(row), br.Bill.Total)
+		f.SetCellValue("Sheet1", "F"+strconv.Itoa(row), br.Bill.CashIn)
+		f.SetCellValue("Sheet1", "G"+strconv.Itoa(row), br.Bill.CashOut)
+
+		for _, db := range br.Detail_bill {
+			f.SetCellValue("Sheet1", "H"+strconv.Itoa(row), db.Id)
+			f.SetCellValue("Sheet1", "I"+strconv.Itoa(row), db.IdBill)
+			f.SetCellValue("Sheet1", "J"+strconv.Itoa(row), db.IdMenu)
+			f.SetCellValue("Sheet1", "K"+strconv.Itoa(row), db.NamaMenu)
+			f.SetCellValue("Sheet1", "L"+strconv.Itoa(row), db.Harga)
+			f.SetCellValue("Sheet1", "M"+strconv.Itoa(row), db.Jumlah)
+			f.SetCellValue("Sheet1", "N"+strconv.Itoa(row), db.TotalHarga)
+
+			// Convert db.TotalHarga to float64 before adding
+			totalSum += float64(db.TotalHarga)
+			row++
+		}
+		row++
+	}
+
+	// Write the total sum below the table
+	totalRow := row + 1
+	f.SetCellValue("Sheet1", "J"+strconv.Itoa(totalRow), "Total")
+	f.SetCellValue("Sheet1", "N"+strconv.Itoa(totalRow), totalSum)
+
+	filePath := "./transactions.xlsx"
+	if err := f.SaveAs(filePath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Serve the file as a download
+	c.Header("Content-Disposition", "attachment; filename=transactions.xlsx")
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.File(filePath)
+}
+
 func Show_transaction(c *gin.Context) {
 	var bills []models.Bill // array to hold all bills
 	// UserResponse struct represents the custom JSON response
