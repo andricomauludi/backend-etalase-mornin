@@ -28,7 +28,7 @@ func TotalCurrentMonth(c *gin.Context) {
 	// Query the total of 'Total' field for bills within the current month
 	if err := models.DB.Model(&Bill).
 		Select("SUM(total) as total").
-		Where("tipe = ? AND timestamp BETWEEN ? AND ?", 0, startOfMonth, endOfMonth).
+		Where("tipe = ? AND timestamp BETWEEN ? AND ? AND paid != ?", 0, startOfMonth, endOfMonth, 0).
 		Scan(&total).
 		Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -59,7 +59,7 @@ func TotalCurrentMonthCvj(c *gin.Context) {
 	// Query the total of 'Total' field for bills within the current month
 	if err := models.DB.Model(&Bill).
 		Select("SUM(total) as total").
-		Where("tipe = ? AND timestamp BETWEEN ? AND ?", 1, startOfMonth, endOfMonth).
+		Where("tipe = ? AND timestamp BETWEEN ? AND ? AND paid != ?", 1, startOfMonth, endOfMonth, 0).
 		Scan(&total).
 		Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -92,7 +92,7 @@ func TotalToday(c *gin.Context) {
 	// Query the total of 'Total' field for bills created today
 	if err := models.DB.Model(&Bill).
 		Select("SUM(total) as total").
-		Where("tipe = ? AND timestamp BETWEEN ? AND ?", 0, startOfToday, endOfToday).
+		Where("tipe = ? AND timestamp BETWEEN ? AND ? AND paid != ?", 0, startOfToday, endOfToday, 0).
 		Scan(&total).
 		Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -123,7 +123,7 @@ func TotalTodayCvj(c *gin.Context) {
 	// Query the total of 'Total' field for bills created today
 	if err := models.DB.Model(&Bill).
 		Select("SUM(total) as total").
-		Where("tipe = ? AND timestamp BETWEEN ? AND ?", 1, startOfToday, endOfToday).
+		Where("tipe = ? AND timestamp BETWEEN ? AND ? AND paid != ?", 1, startOfToday, endOfToday, 0).
 		Scan(&total).
 		Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -290,7 +290,7 @@ func TotalKeuntunganBersihCurrentMonth(c *gin.Context) {
 	// Query the total current month
 	if err = models.DB.Model(&bill).
 		Select("COALESCE(SUM(total), 0) as total").
-		Where("tipe = ? AND timestamp BETWEEN ? AND ?", 0, startOfMonth, endOfMonth).
+		Where("tipe = ? AND timestamp BETWEEN ? AND ? AND paid != ?", 0, startOfMonth, endOfMonth, 0).
 		Scan(&totalCurrentMonth).
 		Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch total current month"})
@@ -333,7 +333,7 @@ func TotalKeuntunganBersihCurrentMonthCvj(c *gin.Context) {
 	// Query the total current month
 	if err = models.DB.Model(&bill).
 		Select("COALESCE(SUM(total), 0) as total").
-		Where("tipe = ? AND timestamp BETWEEN ? AND ?", 1, startOfMonth, endOfMonth).
+		Where("tipe = ? AND timestamp BETWEEN ? AND ? AND paid != ?", 1, startOfMonth, endOfMonth, 0).
 		Scan(&totalCurrentMonth).
 		Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch total current month"})
@@ -376,7 +376,7 @@ func TotalKeuntunganBersihCurrentDay(c *gin.Context) {
 	// Calculate total income for the current day
 	if err := models.DB.Model(&models.Bill{}).
 		Select("COALESCE(SUM(total), 0) as total").
-		Where("tipe = ? AND timestamp BETWEEN ? AND ?", 0, startOfDay, endOfDay).
+		Where("tipe = ? AND timestamp BETWEEN ? AND ? AND paid != ?", 0, startOfDay, endOfDay, 0).
 		Scan(&totalIncome).
 		Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -417,7 +417,7 @@ func TotalKeuntunganBersihCurrentDayCvj(c *gin.Context) {
 	// Calculate total income for the current day
 	if err := models.DB.Model(&models.Bill{}).
 		Select("COALESCE(SUM(total), 0) as total").
-		Where("tipe = ? AND timestamp BETWEEN ? AND ?", 1, startOfDay, endOfDay).
+		Where("tipe = ? AND timestamp BETWEEN ? AND ? AND paid != ?", 1, startOfDay, endOfDay, 0).
 		Scan(&totalIncome).
 		Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

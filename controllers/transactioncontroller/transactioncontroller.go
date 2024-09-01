@@ -96,6 +96,10 @@ func Excel_export(c *gin.Context) {
 	var billResponses []BillResponse
 
 	for i := range bills {
+		// Skip bills where Paid == "0"
+		if bills[i].Paid != "1" {
+			continue
+		}
 		var detailBills []models.Detail_bill
 		if err := models.DB.Find(&detailBills, "id_bill = ?", bills[i].Id).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
