@@ -157,8 +157,16 @@ func Excel_export(c *gin.Context) {
 	f.SetCellValue("Sheet1", "M3", "Jumlah")
 	f.SetCellValue("Sheet1", "N3", "Total Harga")
 
-	// Initialize totalSum as float64
+	// Initialize totalSum as float64 and a map for payment totals
 	var totalSum float64
+	paymentTotals := map[string]float64{
+		"Cash":             0,
+		"Transfer Mandiri": 0,
+		"Transfer BCA":     0,
+		"QRIS":             0,
+		"OVO":              0,
+		"Gopay":            0,
+	}
 
 	// Fill in the bill data
 	row := 4
@@ -191,6 +199,10 @@ func Excel_export(c *gin.Context) {
 
 			// Convert db.TotalHarga to float64 before adding
 			totalSum += float64(db.TotalHarga)
+
+			// Add to the subtotal for the specific payment method
+			paymentTotals[br.Bill.JenisPembayaran] += float64(db.TotalHarga)
+
 			row++
 		}
 		row++
@@ -200,6 +212,15 @@ func Excel_export(c *gin.Context) {
 	totalRow := row + 1
 	f.SetCellValue("Sheet1", "J"+strconv.Itoa(totalRow), "Total")
 	f.SetCellValue("Sheet1", "N"+strconv.Itoa(totalRow), totalSum)
+
+	// Write the subtotals for each payment method
+	row = totalRow + 2
+	f.SetCellValue("Sheet1", "A"+strconv.Itoa(row), "Subtotal for each Jenis Pembayaran:")
+	for paymentType, subtotal := range paymentTotals {
+		row++
+		f.SetCellValue("Sheet1", "A"+strconv.Itoa(row), paymentType)
+		f.SetCellValue("Sheet1", "B"+strconv.Itoa(row), subtotal)
+	}
 
 	filePath := "./transactions.xlsx"
 	if err := f.SaveAs(filePath); err != nil {

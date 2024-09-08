@@ -148,7 +148,7 @@ func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Define allowed origins
 		allowedOrigins := map[string]bool{
-			// "http://localhost:3000":        true,
+			// "http://localhost:3000": true,
 			"http://www.ceumonny.com:3000": true,
 			"http://ceumonny.com:3000":     true,
 			// Add other allowed origins here if needed
