@@ -49,5 +49,5 @@ jobs:
             sudo docker pull ${{ secrets.DOCKER_IMAGE }}
             sudo docker stop pos-backend-container || true
             sudo docker rm pos-backend-container || true
-            sudo docker run -d --name pos-backend-container -p 8090:8090 ${{ secrets.DOCKER_IMAGE }}
+            sudo docker run -d --name pos-backend-container ${{ secrets.DOCKER_IMAGE }}
           EOF
