@@ -407,7 +407,7 @@ func Show_saved_bill(c *gin.Context) {
 		// Assuming you want to convert the product name to base64
 		// Adjust this to convert the appropriate field
 		if err := models.DB.Find(&detail_bill, "id_bill = ?", bill[i].Id).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error :": err.Error()})
 			return
 		}
 		response := BillResponse{
