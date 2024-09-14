@@ -86,10 +86,13 @@ func main() {
 	auth.GET("/showall", middleware.RequireAuth, authcontroller.Showall)
 
 	pendapatan.GET("/show_pendapatan_bulanan", pendapatancontroller.TotalCurrentMonth)
+	pendapatan.POST("/show_pendapatan_bulanan_pembayaran", pendapatancontroller.TotalCurrentMonthJenisPembayaran)
 	pendapatan.GET("/show_pendapatan_bulanan_cvj", pendapatancontroller.TotalCurrentMonthCvj)
 	pendapatan.GET("/show_pendapatan_harian", pendapatancontroller.TotalToday)
+	pendapatan.POST("/show_pendapatan_harian_pembayaran", pendapatancontroller.TotalTodayJenisPembayaran)
 	pendapatan.GET("/show_pendapatan_harian_cvj", pendapatancontroller.TotalTodayCvj)
 	pendapatan.GET("/show_pengeluaran_bulanan", pendapatancontroller.TotalPengeluaranCurrentMonth)
+	pendapatan.POST("/show_pengeluaran_bulanan_jenis", pendapatancontroller.TotalPengeluaranCurrentMonthJenis)
 	pendapatan.GET("/show_pengeluaran_bulanan_cvj", pendapatancontroller.TotalPengeluaranCurrentMonthCvj)
 	pendapatan.GET("/show_pengeluaran_harian", pendapatancontroller.TotalPengeluaranToday)
 	pendapatan.GET("/show_pengeluaran_harian_cvj", pendapatancontroller.TotalPengeluaranTodayCvj)

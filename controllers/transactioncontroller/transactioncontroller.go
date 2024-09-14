@@ -215,7 +215,7 @@ func Excel_export(c *gin.Context) {
 
 	// Write the subtotals for each payment method
 	row = totalRow + 2
-	f.SetCellValue("Sheet1", "A"+strconv.Itoa(row), "Subtotal for each Jenis Pembayaran:")
+	f.SetCellValue("Sheet1", "A"+strconv.Itoa(row), "Total dari masing - masing Jenis Pembayaran:")
 	for paymentType, subtotal := range paymentTotals {
 		row++
 		f.SetCellValue("Sheet1", "A"+strconv.Itoa(row), paymentType)

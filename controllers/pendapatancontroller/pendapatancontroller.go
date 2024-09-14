@@ -42,6 +42,62 @@ func TotalCurrentMonth(c *gin.Context) {
 	// Return JSON response with total amount for the current month
 	c.JSON(http.StatusOK, gin.H{"status": 1, "total_current_month": total.Int64})
 }
+
+// Handler function for /api/total-current-month endpoint
+func TotalCurrentMonthJenisPembayaran(c *gin.Context) {
+	err := c.Request.ParseMultipartForm(10 << 20) // 10MB max size
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": -1, "error": "Failed to parse multipart form"})
+		return
+	}
+
+	JenisPembayaranPost := c.PostForm("jenis_pembayaran")
+	if models.DB == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB connection is nil"})
+		return
+	}
+
+	var Bill models.Bill
+	var total sql.NullInt64
+
+	// Get the current month start and end dates
+	now := time.Now()
+	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	endOfMonth := startOfMonth.AddDate(0, 1, 0).Add(-time.Nanosecond)
+
+	// Start building the query
+	query := models.DB.Model(&Bill).Select("SUM(total) as total").Where("tipe = ? AND timestamp BETWEEN ? AND ? AND paid != ?", 0, startOfMonth, endOfMonth, 0)
+
+	// Only add the jenis_pembayaran filter if JenisPembayaranPost is not empty
+	if JenisPembayaranPost != "Semua Jenis" {
+		query = query.Where("jenis_pembayaran = ?", JenisPembayaranPost)
+	}
+
+	// Execute the query
+	if err := query.Scan(&total).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// If total is NULL, set it to 0
+	if !total.Valid {
+		total.Int64 = 0
+	}
+
+	// Set the response type based on JenisPembayaranPost
+	responseType := JenisPembayaranPost
+	if JenisPembayaranPost == "Semua Jenis" {
+		responseType = "Semua Jenis Pembayaran"
+	}
+
+	// Return JSON response with total amount for the current month
+	c.JSON(http.StatusOK, gin.H{
+		"status":              1,
+		"total_current_month": total.Int64,
+		"type":                responseType,
+	})
+}
+
 func TotalCurrentMonthCvj(c *gin.Context) {
 	if models.DB == nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB connection is nil"})
@@ -105,6 +161,59 @@ func TotalToday(c *gin.Context) {
 
 	// Return JSON response with total amount for today
 	c.JSON(http.StatusOK, gin.H{"status": 1, "total_today": total.Int64})
+}
+func TotalTodayJenisPembayaran(c *gin.Context) {
+	err := c.Request.ParseMultipartForm(10 << 20) // 10MB max size
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": -1, "error": "Failed to parse multipart form"})
+		return
+	}
+
+	JenisPembayaranPost := c.PostForm("jenis_pembayaran")
+	if models.DB == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB connection is nil"})
+		return
+	}
+
+	var Bill models.Bill
+	var total sql.NullInt64
+
+	// Get today's start and end dates
+	today := time.Now()
+	startOfToday := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, today.Location())
+	endOfToday := startOfToday.AddDate(0, 0, 1).Add(-time.Nanosecond)
+
+	// Start building the query
+	query := models.DB.Model(&Bill).Select("SUM(total) as total").Where("tipe = ? AND timestamp BETWEEN ? AND ? AND paid != ?", 0, startOfToday, endOfToday, 0)
+
+	// Only add the jenis_pembayaran filter if JenisPembayaranPost is not empty
+	if JenisPembayaranPost != "Semua Jenis" {
+		query = query.Where("jenis_pembayaran = ?", JenisPembayaranPost)
+	}
+
+	// Execute the query
+	if err := query.Scan(&total).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// If total is NULL, set it to 0
+	if !total.Valid {
+		total.Int64 = 0
+	}
+
+	// Set the response type based on JenisPembayaranPost
+	responseType := JenisPembayaranPost
+	if JenisPembayaranPost == "Semua Jenis" {
+		responseType = "Semua Jenis Pembayaran"
+	}
+
+	// Return JSON response with total amount for the current month
+	c.JSON(http.StatusOK, gin.H{
+		"status":      1,
+		"total_today": total.Int64,
+		"type":        responseType,
+	})
 }
 func TotalTodayCvj(c *gin.Context) {
 	if models.DB == nil {
@@ -171,6 +280,63 @@ func TotalPengeluaranCurrentMonth(c *gin.Context) {
 	// Return JSON response with total amount for the current month
 	c.JSON(http.StatusOK, gin.H{"status": 1, "total_pengeluaran_current_month": total.Int64})
 }
+func TotalPengeluaranCurrentMonthJenis(c *gin.Context) {
+	if models.DB == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB connection is nil"})
+		return
+	}
+
+	// Parse the multipart form to get the 'jenis_pengeluaran'
+	err := c.Request.ParseMultipartForm(10 << 20) // 10MB max size
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": -1, "error": "Failed to parse multipart form"})
+		return
+	}
+
+	JenisPengeluaranPost := c.PostForm("jenis_pengeluaran")
+	var pengeluaran models.Pengeluaran
+	var total sql.NullInt64
+
+	// Get the current month start and end dates
+	now := time.Now()
+	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	endOfMonth := startOfMonth.AddDate(0, 1, 0).Add(-time.Nanosecond)
+
+	// Start building the query
+	query := models.DB.Model(&pengeluaran).
+		Select("COALESCE(SUM(total_pengeluaran), 0) as total").
+		Where("tipe = ? AND waktu_pengeluaran BETWEEN ? AND ?", 0, startOfMonth, endOfMonth)
+
+	// Only add the jenis_pengeluaran filter if JenisPengeluaranPost is not empty
+	if JenisPengeluaranPost != "Semua Jenis" {
+		query = query.Where("jenis_pengeluaran = ?", JenisPengeluaranPost)
+	}
+
+	// Execute the query
+	if err := query.Scan(&total).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// If total is NULL, set it to 0
+	if !total.Valid {
+		total.Int64 = 0
+	}
+
+	// Set the response type based on JenisPengeluaranPost
+	responseType := JenisPengeluaranPost
+	if JenisPengeluaranPost == "Semua Jenis" {
+		responseType = "Semua Jenis Pengeluaran"
+	}
+
+	// Return JSON response with total amount for the current month
+	c.JSON(http.StatusOK, gin.H{
+		"status":                          1,
+		"total_pengeluaran_current_month": total.Int64,
+		"type":                            responseType,
+	})
+}
+
 func TotalPengeluaranCurrentMonthCvj(c *gin.Context) {
 	if models.DB == nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB connection is nil"})
