@@ -49,5 +49,5 @@ jobs:
             sudo docker pull ${{ secrets.DOCKER_IMAGE }}
             sudo docker stop pos-backend-container || true
             sudo docker rm pos-backend-container || true
-            sudo docker run -d --name pos-backend-container --network frontend-connect --ip 172.18.0.4 ${{ secrets.DOCKER_IMAGE }}
+            sudo docker run -d --name pos-backend-container --network frontend-connect ${{ secrets.DOCKER_IMAGE }}
           EOF
