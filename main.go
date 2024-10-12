@@ -80,6 +80,7 @@ func main() {
 	r.POST("api/auth/signup", authcontroller.Signup)
 	r.POST("api/auth/login", authcontroller.Login)
 	r.POST("api/auth/check-auth", authcontroller.CheckAuthHandler)
+	r.POST("api/auth/check-role", authcontroller.CheckRoleHandler)
 
 	auth.POST("/logout", middleware.RequireAuth, authcontroller.Logout)
 	auth.GET("/validate", authcontroller.Validate)
@@ -88,17 +89,25 @@ func main() {
 	pendapatan.GET("/show_pendapatan_bulanan", pendapatancontroller.TotalCurrentMonth)
 	pendapatan.POST("/show_pendapatan_bulanan_pembayaran", pendapatancontroller.TotalCurrentMonthJenisPembayaran)
 	pendapatan.GET("/show_pendapatan_bulanan_cvj", pendapatancontroller.TotalCurrentMonthCvj)
+
 	pendapatan.GET("/show_pendapatan_harian", pendapatancontroller.TotalToday)
 	pendapatan.POST("/show_pendapatan_harian_pembayaran", pendapatancontroller.TotalTodayJenisPembayaran)
 	pendapatan.GET("/show_pendapatan_harian_cvj", pendapatancontroller.TotalTodayCvj)
+
 	pendapatan.GET("/show_pengeluaran_bulanan", pendapatancontroller.TotalPengeluaranCurrentMonth)
 	pendapatan.POST("/show_pengeluaran_bulanan_jenis", pendapatancontroller.TotalPengeluaranCurrentMonthJenis)
 	pendapatan.GET("/show_pengeluaran_bulanan_cvj", pendapatancontroller.TotalPengeluaranCurrentMonthCvj)
+
 	pendapatan.GET("/show_pengeluaran_harian", pendapatancontroller.TotalPengeluaranToday)
+	pendapatan.POST("/show_pengeluaran_harian_jenis", pendapatancontroller.TotalPengeluaranTodayJenis)
 	pendapatan.GET("/show_pengeluaran_harian_cvj", pendapatancontroller.TotalPengeluaranTodayCvj)
+
 	pendapatan.GET("/show_keuntungan_bulanan", pendapatancontroller.TotalKeuntunganBersihCurrentMonth)
+	pendapatan.POST("/show_keuntungan_bulanan_jenis", pendapatancontroller.TotalKeuntunganBersihCurrentMonthJenis)
 	pendapatan.GET("/show_keuntungan_bulanan_cvj", pendapatancontroller.TotalKeuntunganBersihCurrentMonthCvj)
+
 	pendapatan.GET("/show_keuntungan_harian", pendapatancontroller.TotalKeuntunganBersihCurrentDay)
+	pendapatan.POST("/show_keuntungan_harian_jenis", pendapatancontroller.TotalKeuntunganBersihCurrentDayJenis)
 	pendapatan.GET("/show_keuntungan_harian_cvj", pendapatancontroller.TotalKeuntunganBersihCurrentDayCvj)
 
 	// r := gin.Default()

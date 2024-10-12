@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -145,9 +146,10 @@ func Login(c *gin.Context) {
 	//generate a jwt token
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub":  user.ID,
-		"role": user.Role,
-		"exp":  time.Now().Add(time.Hour * 24 * 1).Unix(),
+		"sub":      user.ID,
+		"role":     user.Role,
+		"fullname": user.Fullname,
+		"exp":      time.Now().Add(time.Hour * 24 * 1).Unix(),
 	})
 
 	// Sign and get the complete encoded token as a string using the secret
@@ -267,5 +269,80 @@ func CheckAuthHandler(c *gin.Context) {
 	} else {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [token no valid]"})
 
+	}
+}
+func CheckRoleHandler(c *gin.Context) {
+	// Get Authorization header
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [no header]"})
+		return
+	}
+
+	// Log the Authorization header to check if it's received
+	fmt.Println("Received Authorization header:", authHeader)
+
+	// Split the "Bearer" prefix
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [token format]"})
+		return
+	}
+
+	tokenString := parts[1]
+
+	// Parse and validate the JWT token
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(os.Getenv("SECRET")), nil
+	})
+
+	// Handle token parsing errors
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [token invalid]"})
+		return
+	}
+
+	// Token is valid, extract claims
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		// Check for token expiration
+		if float64(time.Now().Unix()) > claims["exp"].(float64) {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [token expired]"})
+			return
+		}
+
+		// Get the user from the database using the user ID from token claims
+		var user models.User
+		models.DB.First(&user, claims["sub"]) // Assuming "sub" is user ID in JWT claims
+
+		if user.ID == 0 {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [no user found]"})
+			return
+		}
+
+		// Convert role to string and parse it to an integer if necessary
+		userRoleStr := claims["role"].(string) // Assuming role is stored as string in JWT
+		userRole, err := strconv.Atoi(userRoleStr)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "Invalid role format"})
+			return
+		}
+
+		// Extract the username from claims
+		username := claims["fullname"].(string) // Assuming username is stored in JWT claims
+
+		// Check if the user has the required role (role 1, 2, or 3)
+		if userRole == 1 || userRole == 2 || userRole == 3 {
+			// Authorized, return success response
+			c.JSON(http.StatusOK, gin.H{"status": 1, "data": "User is authorized", "role": userRole, "fullname": username})
+		} else {
+			// Unauthorized, role does not match
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": -1, "data": "You are unauthorized [insufficient role]"})
+		}
+	} else {
+		// Token is not valid or claims could not be parsed
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": -1, "data": "You are unauthorized [token not valid]"})
 	}
 }
