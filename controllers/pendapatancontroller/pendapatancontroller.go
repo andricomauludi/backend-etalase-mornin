@@ -308,7 +308,7 @@ func TotalPengeluaranCurrentMonthJenis(c *gin.Context) {
 		Where("tipe = ? AND waktu_pengeluaran BETWEEN ? AND ?", 0, startOfMonth, endOfMonth)
 
 	// Only add the jenis_pengeluaran filter if JenisPengeluaranPost is not empty
-	if JenisPengeluaranPost != "Semua Jenis" {
+	if JenisPengeluaranPost != "" && JenisPengeluaranPost != "Semua Jenis" {
 		query = query.Where("jenis_pengeluaran = ?", JenisPengeluaranPost)
 	}
 
