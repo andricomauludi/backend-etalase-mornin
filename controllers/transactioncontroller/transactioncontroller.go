@@ -71,12 +71,23 @@ func Excel_export(c *gin.Context) {
 	}
 
 	// Read form data
+	jenisLayananStr := c.PostForm("jenis_layanan") //kalau 0 berarti ceu monny, kalau 1 berarti cvj
+
 	day := c.PostForm("day")
 	month := c.PostForm("month")
 	year := c.PostForm("year")
 
+	print(jenisLayananStr)
+
+	jenisLayanan, err := strconv.Atoi(jenisLayananStr)
+	if err != nil {
+		// Jika terjadi kesalahan dalam konversi, tangani errornya
+		c.JSON(400, gin.H{"error": "jenis layanan harus berupa angka"})
+		return
+	}
+
 	// Build the query based on the parameters
-	query := models.DB.Where("tipe = ?", 0)
+	query := models.DB.Where("tipe = ?", jenisLayanan)
 	if day != "" {
 		query = query.Where("DAY(timestamp) = ?", day)
 	}
@@ -124,7 +135,13 @@ func Excel_export(c *gin.Context) {
 	// Set the active sheet of the workbook
 	f.SetActiveSheet(index)
 	// Add title, date filter details above the table
-	f.SetCellValue("Sheet1", "A1", "Rekap Ceu Monny")
+
+	if jenisLayanan == 0 {
+		f.SetCellValue("Sheet1", "A1", "Rekap Ceu Monny")
+	} else if jenisLayanan == 1 {
+		f.SetCellValue("Sheet1", "A1", "Rekap CVJ")
+	}
+
 	f.MergeCell("Sheet1", "A1", "N1") // Merge cells for the title
 	// Add date filter details above the table
 	dateFilter := "Tanggal : "
@@ -230,6 +247,145 @@ func Excel_export(c *gin.Context) {
 
 	// Serve the file as a download
 	c.Header("Content-Disposition", "attachment; filename=transactions.xlsx")
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.File(filePath)
+}
+
+func Excel_export_pengeluaran(c *gin.Context) {
+	var pengeluarans []models.Pengeluaran
+
+	// Read form data
+	jenisLayananStr := c.PostForm("jenis_layanan") //kalau 0 berarti ceu monny, kalau 1 berarti cvj
+	jenisLayanan, err := strconv.Atoi(jenisLayananStr)
+	if err != nil {
+		// Jika terjadi kesalahan dalam konversi, tangani errornya
+		c.JSON(400, gin.H{"error": "jenis layanan harus berupa angka"})
+		return
+	}
+	day := c.PostForm("day")
+	month := c.PostForm("month")
+	year := c.PostForm("year")
+
+	// Build the query based on the parameters
+	query := models.DB
+	if day != "" {
+		query = query.Where("DAY(waktu_pengeluaran) = ?", day)
+	}
+	if month != "" {
+		query = query.Where("MONTH(waktu_pengeluaran) = ?", month)
+	}
+	if year != "" {
+		query = query.Where("YEAR(waktu_pengeluaran) = ?", year)
+	}
+
+	// Execute the query
+	if err := query.Find(&pengeluarans).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Create a new Excel file
+	f := excelize.NewFile()
+	// Create a new sheet and handle the returned index and error
+	index, err := f.NewSheet("Sheet1")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Set the active sheet of the workbook
+	f.SetActiveSheet(index)
+
+	// Add title, date filter details above the table
+	if jenisLayanan == 0 {
+		f.SetCellValue("Sheet1", "A1", "Rekap Pengeluaran Ceu Monny")
+	} else if jenisLayanan == 1 {
+		f.SetCellValue("Sheet1", "A1", "Rekap Pengeluaran CVJ")
+	}
+	f.MergeCell("Sheet1", "A1", "H1") // Merge cells for the title
+
+	// Add date filter details above the table
+	dateFilter := "Tanggal : "
+	if day != "" {
+		dateFilter += "Hari " + day + " "
+	}
+	if month != "" {
+		dateFilter += "Bulan " + month + " "
+	}
+	if year != "" {
+		dateFilter += "Tahun " + year
+	}
+	f.SetCellValue("Sheet1", "A2", dateFilter)
+
+	// Header for the Pengeluaran data
+	f.SetCellValue("Sheet1", "A3", "Pengeluaran ID")
+	f.SetCellValue("Sheet1", "B3", "Nama Pengeluaran")
+	f.SetCellValue("Sheet1", "C3", "Jenis Pengeluaran")
+	f.SetCellValue("Sheet1", "D3", "Waktu Pengeluaran")
+	f.SetCellValue("Sheet1", "E3", "Harga Pengeluaran")
+	f.SetCellValue("Sheet1", "F3", "Jumlah Barang")
+	f.SetCellValue("Sheet1", "G3", "Satuan")
+	f.SetCellValue("Sheet1", "H3", "Total Pengeluaran")
+
+	// Initialize totalSum and paymentTotals map for "JenisPengeluaran"
+	var totalSum float64
+	pengeluaranTotals := map[string]float64{
+		"Cash":             0,
+		"Transfer Mandiri": 0,
+		"Transfer BCA":     0,
+		"QRIS":             0,
+		"OVO":              0,
+		"Gopay":            0,
+		"Others":           0, // Initialize "Others"
+	}
+
+	// Fill in the pengeluaran data
+	row := 4
+	for _, p := range pengeluarans {
+		f.SetCellValue("Sheet1", "A"+strconv.Itoa(row), p.Id)
+		f.SetCellValue("Sheet1", "B"+strconv.Itoa(row), p.NamaPengeluaran)
+		f.SetCellValue("Sheet1", "C"+strconv.Itoa(row), p.JenisPengeluaran)
+		f.SetCellValue("Sheet1", "D"+strconv.Itoa(row), p.WaktuPengeluaran.Format("02 January 2006 15:04:05"))
+		f.SetCellValue("Sheet1", "E"+strconv.Itoa(row), p.HargaPengeluaran)
+		f.SetCellValue("Sheet1", "F"+strconv.Itoa(row), p.JumlahBarang)
+		f.SetCellValue("Sheet1", "G"+strconv.Itoa(row), p.Satuan)
+		f.SetCellValue("Sheet1", "H"+strconv.Itoa(row), p.TotalPengeluaran)
+
+		// Convert TotalPengeluaran to float64 before adding
+		totalSum += float64(p.TotalPengeluaran)
+
+		// Add to the subtotal for the specific "JenisPengeluaran" or "Others" if not listed
+		if _, exists := pengeluaranTotals[p.JenisPengeluaran]; exists {
+			pengeluaranTotals[p.JenisPengeluaran] += float64(p.TotalPengeluaran)
+		} else {
+			pengeluaranTotals["Others"] += float64(p.TotalPengeluaran)
+		}
+
+		row++
+	}
+
+	// Write the total sum below the table
+	totalRow := row + 1
+	f.SetCellValue("Sheet1", "G"+strconv.Itoa(totalRow), "Total")
+	f.SetCellValue("Sheet1", "H"+strconv.Itoa(totalRow), totalSum)
+
+	// Write the subtotals for each Jenis Pengeluaran
+	row = totalRow + 2
+	f.SetCellValue("Sheet1", "A"+strconv.Itoa(row), "Total dari masing - masing Jenis Pengeluaran:")
+	for jenisPengeluaran, subtotal := range pengeluaranTotals {
+		row++
+		f.SetCellValue("Sheet1", "A"+strconv.Itoa(row), jenisPengeluaran)
+		f.SetCellValue("Sheet1", "B"+strconv.Itoa(row), subtotal)
+	}
+
+	filePath := "./pengeluaran.xlsx"
+	if err := f.SaveAs(filePath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Serve the file as a download
+	c.Header("Content-Disposition", "attachment; filename=pengeluaran.xlsx")
 	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	c.File(filePath)
 }
