@@ -65,30 +65,21 @@ func ConvertFileToBase64(filePath string) (string, error) {
 	return base64String, nil
 }
 func Show_makanan(c *gin.Context) {
+	var products []models.Product // Array to hold products
 
-	var products []models.Product //array dan ambil model product
-
+	// Fetch products of type "makanan" from the database
 	if err := models.DB.Find(&products, "jenis_menu = ?", "makanan").Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Loop through the products and convert their desired fields to base64
-	var base64Strings []string
-	for i, product := range products {
-		// Assuming you want to convert the product name to base64
-		// Adjust this to convert the appropriate field
-		base64String, err := ConvertFileToBase64("assets/photo/products/" + product.Photo)
-		if err != nil {
-			c.JSON(http.StatusOK, gin.H{"status": -1, "message": "error on base 64", "base64": base64Strings, "data": products})
-
-		}
-		products[i].Photo = base64String
-
-		// base64String := base64.StdEncoding.EncodeToString([]byte("assets/photo/products/"+product.Photo))
+	// Update products to include image URLs instead of base64
+	for i := range products {
+		// Assign the image URL instead of converting to base64
+		products[i].Photo = products[i].Photo
 	}
 
-	// Return the JSON response with products and their base64 encoded fields
+	// Return the JSON response with products and their image URLs
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products})
 }
 func Show_barbershop(c *gin.Context) {

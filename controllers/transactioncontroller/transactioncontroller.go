@@ -364,7 +364,7 @@ func Excel_export_pengeluaran(c *gin.Context) {
 		row++
 	}
 
-	// Write the total sum below the table
+	// Write the total sum below the tables
 	totalRow := row + 1
 	f.SetCellValue("Sheet1", "G"+strconv.Itoa(totalRow), "Total")
 	f.SetCellValue("Sheet1", "H"+strconv.Itoa(totalRow), totalSum)
