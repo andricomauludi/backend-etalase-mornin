@@ -92,19 +92,6 @@ func Show_barbershop(c *gin.Context) {
 	}
 
 	// Loop through the products and convert their desired fields to base64
-	var base64Strings []string
-	for i, product := range products {
-		// Assuming you want to convert the product name to base64
-		// Adjust this to convert the appropriate field
-		base64String, err := ConvertFileToBase64("assets/photo/products/" + product.Photo)
-		if err != nil {
-			c.JSON(http.StatusOK, gin.H{"status": -1, "message": "error on base 64", "base64": base64Strings, "data": products})
-
-		}
-		products[i].Photo = base64String
-
-		// base64String := base64.StdEncoding.EncodeToString([]byte("assets/photo/products/"+product.Photo))
-	}
 
 	// Return the JSON response with products and their base64 encoded fields
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products})
@@ -117,21 +104,6 @@ func Show_cemilan(c *gin.Context) {
 		return
 	}
 
-	// Loop through the products and convert their desired fields to base64
-	var base64Strings []string
-	for i, product := range products {
-		// Assuming you want to convert the product name to base64
-		// Adjust this to convert the appropriate field
-		base64String, err := ConvertFileToBase64("assets/photo/products/" + product.Photo)
-		if err != nil {
-			c.JSON(http.StatusOK, gin.H{"status": -1, "message": "error on base 64", "base64": base64Strings, "data": products})
-
-		}
-		products[i].Photo = base64String
-
-		// base64String := base64.StdEncoding.EncodeToString([]byte("assets/photo/products/"+product.Photo))
-	}
-
 	// Return the JSON response with products and their base64 encoded fields
 	c.JSON(http.StatusOK, gin.H{"status": 1, "data": products})
 }
@@ -141,21 +113,6 @@ func Show_minuman(c *gin.Context) {
 	if err := models.DB.Find(&products, "jenis_menu = ?", "minuman").Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
-	}
-
-	// Loop through the products and convert their desired fields to base64
-	var base64Strings []string
-	for i, product := range products {
-		// Assuming you want to convert the product name to base64
-		// Adjust this to convert the appropriate field
-		base64String, err := ConvertFileToBase64("assets/photo/products/" + product.Photo)
-		if err != nil {
-			c.JSON(http.StatusOK, gin.H{"status": -1, "error ": err, "message": "error on base 64", "base64": base64Strings, "data": products})
-
-		}
-		products[i].Photo = base64String
-
-		// base64String := base64.StdEncoding.EncodeToString([]byte("assets/photo/products/"+product.Photo))
 	}
 
 	// Return the JSON response with products and their base64 encoded fields
