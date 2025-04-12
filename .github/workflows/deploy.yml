@@ -3,7 +3,7 @@ name: Deploy Gin Golang Application
 on:
   push:
     branches:
-      - main  # Replace with the branch you want to trigger deployment
+      - main
 
 jobs:
   build-and-deploy:
@@ -35,18 +35,18 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          DOCKER_IMAGE: ${{ secrets.DOCKER_IMAGE }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
         run: |
-          # Install SSH Client
           sudo apt-get update
           sudo apt-get install -y sshpass
 
-          # Write the SSH private key to a file
           echo "$SSH_PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
 
-          # Deploy Docker container to VM
-          ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USERNAME@$SSH_HOST << 'EOF'
-            sudo docker pull ${{ secrets.DOCKER_IMAGE }}
+          ssh -o StrictHostKeyChecking=no -i private_key.pem $SSH_USERNAME@$SSH_HOST << EOF
+            sudo docker pull $DOCKER_IMAGE
+
             # Untuk Cabang 1
             sudo docker stop pos-backend-container || true
             sudo docker rm pos-backend-container || true
@@ -54,11 +54,11 @@ jobs:
               --name pos-backend-container \
               --network frontend-connect \
               -e DATABASE_USER=root \
-              -e DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}  \
-              -e DATABASE_HOST=${{ secrets.SSH_HOST }} \
-              -e DATABASE_NAME='posdatabase' \
-              -p 8091:8090 \  # Port yang unik untuk Cabang 1
-              ${{ secrets.DOCKER_IMAGE }}
+              -e DATABASE_PASSWORD=$DATABASE_PASSWORD \
+              -e DATABASE_HOST=$SSH_HOST \
+              -e DATABASE_NAME=posdatabase \
+              -p 8091:8090 \
+              $DOCKER_IMAGE
 
             # Untuk Cabang 2
             sudo docker stop pos-backend-cabang2-container || true
@@ -67,9 +67,9 @@ jobs:
               --name pos-backend-cabang2-container \
               --network frontend-connect \
               -e DATABASE_USER=root \
-              -e DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}  \
-              -e DATABASE_HOST=${{ secrets.SSH_HOST }} \
-              -p 8092:8090 \  # Port yang unik untuk Cabang 2
-              -e DATABASE_NAME='posdatabase-cabang2' \
-              ${{ secrets.DOCKER_IMAGE }}
+              -e DATABASE_PASSWORD=$DATABASE_PASSWORD \
+              -e DATABASE_HOST=$SSH_HOST \
+              -e DATABASE_NAME=posdatabase-cabang2 \
+              -p 8092:8090 \
+              $DOCKER_IMAGE
           EOF
