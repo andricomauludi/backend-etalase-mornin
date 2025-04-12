@@ -55,7 +55,7 @@ jobs:
               --network frontend-connect \
               -e DATABASE_USER=root \
               -e DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}  \
-              -e DATABASE_HOST=${{ secrets.SSH_HOST }} \
+              -e DATABASE_HOST='ip-db-cabang1' \
               -e DATABASE_NAME='posdatabase' \
               ${{ secrets.DOCKER_IMAGE }}
 
@@ -67,7 +67,7 @@ jobs:
               --network frontend-connect \
               -e DATABASE_USER=root \
               -e DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}  \
-              -e DATABASE_HOST=${{ secrets.SSH_HOST }} \
+              -e DATABASE_HOST='ip-db-cabang2' \
               -e DATABASE_NAME='posdatabase-cabang2' \
               ${{ secrets.DOCKER_IMAGE }}
           EOF
