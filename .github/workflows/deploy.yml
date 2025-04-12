@@ -57,6 +57,7 @@ jobs:
               -e DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}  \
               -e DATABASE_HOST=${{ secrets.SSH_HOST }} \
               -e DATABASE_NAME='posdatabase' \
+              -p 8091:8090 \  # Port yang unik untuk Cabang 1
               ${{ secrets.DOCKER_IMAGE }}
 
             # Untuk Cabang 2
@@ -68,6 +69,7 @@ jobs:
               -e DATABASE_USER=root \
               -e DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}  \
               -e DATABASE_HOST=${{ secrets.SSH_HOST }} \
+              -p 8092:8090 \  # Port yang unik untuk Cabang 2
               -e DATABASE_NAME='posdatabase-cabang2' \
               ${{ secrets.DOCKER_IMAGE }}
           EOF
